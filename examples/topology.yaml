@@ -1,0 +1,52 @@
+schema_version: "0.2"
+metadata:
+  name: rapidwebs-rwdn
+  description: RapidWebs Distributed Network
+  updated: 2026-08-27
+zones:
+  - id: edge
+    name: Edge
+  - id: infra
+    name: Infra
+nodes:
+  - id: cloudflare
+    zone: edge
+    type: external
+  - id: srv1
+    zone: edge
+    type: host
+    provider: hetzner
+    public_ip: 89.167.54.98
+    tailscale_ip: 100.64.94.58
+  - id: infra
+    zone: infra
+    type: container
+    host: srv1
+    tailscale_ip: 100.64.255.48
+    cpu: 2
+    memory: 2GiB
+services:
+  - id: pgvector
+    node: infra
+    kind: database
+    image: docker.io/pgvector/pgvector:pg16
+    ports:
+      - port: 5432
+    managed_by: quadlet
+  - id: honcho
+    node: infra
+    kind: application
+    image: docker.io/rapidwebs/honcho:latest
+    ports:
+      - port: 8000
+    managed_by: quadlet
+dependencies:
+  - id: honcho-requires-pgvector
+    from: honcho
+    to: pgvector
+    type: requires
+links:
+  - id: cloudflare-to-srv1
+    from: cloudflare
+    to: srv1
+    protocol: https
