@@ -34,24 +34,55 @@
   first-class); ADR-006 added (structured ports).
 - **Implementation plan** — `docs/specs/IMPL-RWBP-2026-001.md` written, mapping
   all audit findings to ordered deliverables.
+- **Reconcile-layer research campaign** — 6 additional reports in
+  `docs/research/` (reconciliation control-loop patterns, probe/collector
+  architecture, event-driven watchdog push, live-state projection contract,
+  osquery-style host introspection, reference projects).
+- **Reconcile-layer SPEC + ADRs** — `docs/specs/RWBP-2026-002.SPEC.md` (v0.2.0)
+  and ADRs 0007–0012 all **Accepted** after forward/reverse audits and synthesis.
+- **Reconcile-layer implementation (Phase A — Pull Loop)** — `live_state.py`,
+  `probes.py`, `reconciler.py`, CLI `reconcile` + `probe` commands, tests.
+  All quality gates green (24 tests pass, ruff/mypy clean). End-to-end
+  `rw-blueprint reconcile` produces correct drift reports.
 
 ### In progress
 
-- None.
+- None. **Phase A complete**. Ready for Phase B (watchdog push emitters) when
+  needed, or to apply the tool to the live RWDN.
 
 ### Next (specific steps)
 
-1. **Commit** the v0.2.0 implementation (schema, generator, templates, example,
-   tests, forward-audit re-run) with a conventional commit.
-2. **Optional follow-ups** (deferred, not blocking):
-   - Path validation / input-size guards (S-1, S-3) — deferred to the P5 agent
-     phase per IMPL §3.2.
-   - Rendering backends (Marrow/Shumoku) — deferred per ADR-002.
-   - Live drift detection — RWDN Recovery Roadmap P4.
+1. **Apply to RWDN** — model the live RWDN topology into `topology.yaml`,
+   run `rw-blueprint reconcile` against actual infrastructure to produce
+   the canonical drift report.
+2. **Execute RWDN Recovery Roadmap P1 (Stabilize)** — consolidate the dual-instance
+   Caddy (the #1 single point of failure), capture Hetzner firewall rules,
+   fix Tailscale mesh degradation.
+3. **Phase B (deferred, non-blocking)** — watchdog push emitters (podman/incus/
+   systemd events) per ADR-009 pull-first sequencing.
 
 ### Blockers / questions
 
-- None. Implementation complete and green; awaiting commit.
+- None. The reconcile layer is complete and green.
+
+## Reconcile-layer documents (2026-08-27, complete)
+
+- **SPEC**: `docs/specs/RWBP-2026-002.SPEC.md` (v0.2.0) — 9 REQs covering
+  live-state projection schema, probe registry, reconciler (3-way drift
+  classification + severity + ignore rules), watchdog event contract, security
+  boundary, determinism, strict validation.
+- **ADRs** (all Accepted):
+  - `0007` — live-state schema as a projection of the topology schema
+  - `0008` — three-way drift classification (missing/extra/mismatched) + severity
+  - `0009` — pull-first sequencing (collectors before watchdogs)
+  - `0010` — in-process probe registry (no plugin framework)
+  - `0011` — emit-is-untrusted / apply-is-gated security boundary
+  - `0012` — borrow the osquery model, not the osquery tool
+- **Research** (10 reports total in `docs/research/`): added reconciliation
+  control-loop patterns, probe/collector plugin architecture, event-driven
+  watchdog push architecture, live-state projection contract, osquery-style host
+  introspection, and reference projects (tfdrift + driftguard cloned to
+  `~/.references/`).
 
 ## Decision log
 
@@ -66,3 +97,10 @@
 - `[2026-08-27] SCHEMA (v2): dependencies first-class (ADR-005 amended);
   structured ports {port, public?, protocol?} (ADR-006); directed links implicit
   in from/to; schema_version enforced.`
+- `[2026-08-27] RECONCILE LAYER: live-state projection (ADR-007); three-way
+  drift classification + severity (ADR-008); pull-first (ADR-009); in-process
+  probe registry (ADR-010); emit-untrusted/apply-gated (ADR-011); osquery model
+  not tool (ADR-012).`
+- `[2026-08-27] IMPLEMENTATION: Phase A (pull loop) complete — live_state.py,
+  probes.py (incus/podman/port/dns/tailscale), reconciler.py (3-way diff +
+  severity + ignore rules), CLI reconcile/probe commands. All gates green.`

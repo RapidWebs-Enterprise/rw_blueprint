@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rw_blueprint"
-version = "0.1.0"
-description = "Declarative infrastructure source-of-truth engine: YAML topology -> generated diagrams, docs, and IaC skeletons."
+version = "0.2.0"
+description = "Declarative infrastructure source-of-truth engine: YAML topology -> generated diagrams, docs, and IaC skeletons. Includes live-state probes and drift reconciliation."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "RapidWebs" }]
-keywords = ["infrastructure", "topology", "source-of-truth", "diagram-as-code", "iac", "yaml"]
+keywords = ["infrastructure", "topology", "source-of-truth", "diagram-as-code", "iac", "yaml", "drift-detection", "reconciliation"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
