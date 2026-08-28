@@ -4,7 +4,7 @@
 ## Document Identification
 - **ADR ID**: 011
 - **Title**: Emit-is-untrusted / apply-is-gated security boundary
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-08-27
 - **Author**: Network Systems Specialist
 - **Stakeholders**: Steven (sysop)

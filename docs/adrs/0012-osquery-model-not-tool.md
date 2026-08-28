@@ -4,7 +4,7 @@
 ## Document Identification
 - **ADR ID**: 012
 - **Title**: Borrow the osquery model, not the osquery tool
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-08-27
 - **Author**: Network Systems Specialist
 - **Stakeholders**: Steven (sysop)

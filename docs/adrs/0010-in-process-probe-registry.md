@@ -4,7 +4,7 @@
 ## Document Identification
 - **ADR ID**: 010
 - **Title**: In-process probe registry over a plugin framework
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-08-27
 - **Author**: Network Systems Specialist
 - **Stakeholders**: Steven (sysop)
