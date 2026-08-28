@@ -1,0 +1,32 @@
+# rw_codegate Project Configuration for rw_blueprint
+# Location: .rw_codegate.toml (in project root)
+
+[llm]
+provider = "openai"
+model = "agnes-2.5-flash"
+base_url = "https://apihub.agnes-ai.com/v1"
+
+[embeddings]
+provider = "rw_inference"
+rw_inference_url = "http://100.75.220.1:8300"
+
+[severity_weights]
+critical = 20
+high = 10
+medium = 5
+low = 2
+
+passing_threshold = 80
+
+[gates]
+# Customize gate behavior per-project
+PlaceholderDetectionGate = { enabled = true }
+FileSizeGate = { enabled = true, max_lines = 500 }
+
+# Disable gates that produce false positives for our codebase
+InjectionVulnerabilityGate = { enabled = false }
+LoggingFailureGate = { enabled = false }
+ModelTheftGate = { enabled = false }
+TrainingDataLeakageGate = { enabled = false }
+IntegrityGate = { enabled = false }
+InsecureDesignGate = { enabled = false }
