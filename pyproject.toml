@@ -43,9 +43,13 @@ dev = [
     "mypy>=1.10",
     "types-PyYAML>=6.0",
 ]
+mcp = [
+    "mcp>=1.0",
+]
 
 [project.scripts]
 rw-blueprint = "rw_blueprint.cli:app"
+rw-blueprint-mcp = "rw_blueprint.mcp_server:run"
 
 [tool.setuptools.packages.find]
 where = ["src"]

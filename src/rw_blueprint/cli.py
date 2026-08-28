@@ -20,6 +20,8 @@ from rw_blueprint.reconciler import (
     Reconciler,
     load_ignore_rules_from_yaml,
 )
+from rw_blueprint.remediation import generate_remediation
+from rw_blueprint.report import DriftReportModel
 
 app = typer.Typer(
     name="rw-blueprint",
@@ -38,10 +40,10 @@ def validate(path: str) -> None:
         topology = load_topology(path)
     except FileNotFoundError:
         err_console.print(f"[red]Error:[/red] file not found: {path}")
-        raise typer.Exit(code=1) from None
+        raise typer.Exit(code=2) from None
     except ValueError as exc:
         err_console.print(f"[red]Validation failed:[/red] {exc}")
-        raise typer.Exit(code=1) from None
+        raise typer.Exit(code=2) from None
     console.print(
         f"[green]Valid[/green] topology '{topology.metadata.name}' "
         f"({len(topology.nodes)} nodes, {len(topology.services)} services)."
@@ -55,10 +57,10 @@ def generate(path: str, output: str = "generated/") -> None:
         topology = load_topology(path)
     except FileNotFoundError:
         err_console.print(f"[red]Error:[/red] file not found: {path}")
-        raise typer.Exit(code=1) from None
+        raise typer.Exit(code=2) from None
     except ValueError as exc:
         err_console.print(f"[red]Validation failed:[/red] {exc}")
-        raise typer.Exit(code=1) from None
+        raise typer.Exit(code=2) from None
     written = generate_artifacts(topology, output)
     console.print(f"[green]Generated {len(written)} artifact(s)[/green] -> {output}")
     for path_written in written:
@@ -79,7 +81,7 @@ def probe(
         if invalid:
             err_console.print(f"[red]Unknown probes:[/red] {', '.join(invalid)}")
             err_console.print(f"Available: {', '.join(available)}")
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=2)
         fragment, results = registry.run_selected(names)
     else:
         fragment, results = registry.run_all()
@@ -126,7 +128,7 @@ def probe(
     console.print(table)
 
     if any(r.errors for r in results.values()):
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=2)
 
 
 @app.command()
@@ -145,6 +147,9 @@ def reconcile(
     fail_on: str = typer.Option(
         "critical", "--fail-on", help="Exit non-zero on severity: critical, warning, info, none"
     ),
+    remediate: bool = typer.Option(
+        False, "--remediate", "-r", help="Generate remediation proposals from drift"
+    ),
 ) -> None:
     """Reconcile declared topology against observed live state."""
     # Load topology
@@ -152,10 +157,10 @@ def reconcile(
         topo = load_topology(topology)
     except FileNotFoundError:
         err_console.print(f"[red]Error:[/red] topology file not found: {topology}")
-        raise typer.Exit(code=1) from None
-    except ValueError as exc:
+        raise typer.Exit(code=2) from None
+    except (ValueError, Exception) as exc:
         err_console.print(f"[red]Topology validation failed:[/red] {exc}")
-        raise typer.Exit(code=1) from None
+        raise typer.Exit(code=2) from None
 
     # Load live state
     try:
@@ -164,10 +169,10 @@ def reconcile(
         live = LiveState.model_validate(live_data)
     except FileNotFoundError:
         err_console.print(f"[red]Error:[/red] live state file not found: {live_state}")
-        raise typer.Exit(code=1) from None
+        raise typer.Exit(code=2) from None
     except Exception as exc:
         err_console.print(f"[red]Failed to parse live state:[/red] {exc}")
-        raise typer.Exit(code=1) from None
+        raise typer.Exit(code=2) from None
 
     # Load ignore rules
     ignore = IgnoreRules()
@@ -176,7 +181,7 @@ def reconcile(
             ignore = load_ignore_rules_from_yaml(ignore_rules)
         except Exception as exc:
             err_console.print(f"[red]Failed to load ignore rules:[/red] {exc}")
-            raise typer.Exit(code=1) from None
+            raise typer.Exit(code=2) from None
 
     # Run reconciliation
     reconciler = Reconciler(ignore_rules=ignore)
@@ -184,24 +189,41 @@ def reconcile(
     report.topology_file = topology
     report.live_state_file = live_state
 
+    # Build typed report model for serialization
+    report_model = DriftReportModel.from_drift_report(report)
+
     # Output
     if format == "json":
+        json_str = report_model.model_dump_json_deterministic()
         if output:
             with open(output, "w") as f:
-                json.dump(report.__dict__, f, indent=2, default=str)
+                f.write(json_str)
         else:
-            console.print_json(json.dumps(report.__dict__, default=str))
+            console.print_json(json_str)
     elif format == "summary":
         _print_summary(report)
     else:
         _print_table(report)
 
     if output and format != "json":
+        json_str = report_model.model_dump_json_deterministic()
         with open(output, "w") as f:
-            json.dump(report.__dict__, f, indent=2, default=str)
+            f.write(json_str)
         console.print(f"[green]Drift report written to[/green] {output}")
 
-    # Exit code based on severity
+    # Remediation proposals (ADR-0015: gated, never auto-applied)
+    if remediate:
+        plan = generate_remediation(report)
+        if format == "json":
+            import json as _json
+
+            console.print_json(_json.dumps(plan.to_dict()))
+        else:
+            _print_remediation(plan)
+        if plan.requires_hitl:
+            console.print("\n[yellow]⚠ Some proposals require human-in-the-loop approval.[/yellow]")
+
+    # Exit code based on severity threshold (ADR-017: 0=clean, 1=drift, 2=error)
     if fail_on != "none":
         severity_order = {"critical": 3, "warning": 2, "info": 1, "none": 0}
         threshold = severity_order.get(fail_on, 3)
@@ -212,6 +234,7 @@ def reconcile(
                 max_severity = max(max_severity, sev_val)
         if max_severity >= threshold:
             raise typer.Exit(code=1)
+    # Exit 0: clean (no drift at/above threshold, or --fail-on none)
 
 
 def _print_table(report: DriftReport) -> None:
@@ -273,6 +296,60 @@ def _print_summary(report: DriftReport) -> None:
     console.print(f"  Missing:  {report.summary['missing']}")
     console.print(f"  Extra:    {report.summary['extra']}")
     console.print(f"  Mismatched: {report.summary['mismatched']}")
+
+
+def _print_remediation(plan: object) -> None:
+    """Print remediation proposals as a rich table."""
+    from rw_blueprint.remediation import RemediationPlan
+
+    if not isinstance(plan, RemediationPlan):
+        err_console.print("[red]Internal error:[/red] expected RemediationPlan")
+        raise typer.Exit(code=2)
+
+    if not plan.proposals:
+        console.print("[green]No remediation needed[/green]")
+        return
+
+    table = Table(title=f"Remediation Plan ({len(plan.proposals)} proposals)")
+    table.add_column("Op")
+    table.add_column("Path")
+    table.add_column("Entity")
+    table.add_column("Blast Radius")
+    table.add_column("HITL")
+    table.add_column("Description")
+
+    for p in plan.proposals:
+        hitl = "[red]YES[/red]" if p.requires_approval else "[green]no[/green]"
+        blast_color = {
+            "node": "green",
+            "service": "yellow",
+            "zone": "red",
+            "mesh": "red",
+        }.get(p.blast_radius.value, "white")
+
+        table.add_row(
+            p.op.value.upper(),
+            p.path,
+            f"{p.drift_item.entity_type}/{p.drift_item.entity_id}",
+            f"[{blast_color}]{p.blast_radius.value}[/{blast_color}]",
+            hitl,
+            p.description[:80],
+        )
+
+    console.print(table)
+
+
+@app.command()
+def mcp(
+    transport: str = typer.Option("stdio", "--transport", "-t", help="Transport: stdio or http"),
+) -> None:
+    """Start the MCP server for agent integration (ADR-0013)."""
+    try:
+        from rw_blueprint.mcp_server import run as run_mcp
+    except ImportError:
+        err_console.print("[red]MCP support not installed.[/red] Install with: uv sync --group mcp")
+        raise typer.Exit(code=2) from None
+    run_mcp(transport)
 
 
 if __name__ == "__main__":

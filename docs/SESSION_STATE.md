@@ -6,7 +6,7 @@
 >
 > Format: `[YYYY-MM-DD] CATEGORY: description + resolution`.
 
-## Current status (last updated 2026-08-27)
+## Current status (last updated 2026-08-28)
 
 ### Completed
 
@@ -47,23 +47,23 @@
 
 ### In progress
 
-- None. **Phase A complete**. Ready for Phase B (watchdog push emitters) when
-  needed, or to apply the tool to the live RWDN.
+- **SPEC RWBP-2026-003 → v0.2.0 COMPLETE** (MCP + JSON/exit-codes + remediation):
+  SPEC written, forward + reverse audits run, synthesis (D-01…D-11) applied, ADRs 0013/0015/0017
+  Accepted, implementation plan written (`IMPL-RWBP-2026-003.md`).
+  **AWAITING SIGN-OFF before TDD.**
 
 ### Next (specific steps)
 
-1. **Apply to RWDN** — model the live RWDN topology into `topology.yaml`,
-   run `rw-blueprint reconcile` against actual infrastructure to produce
-   the canonical drift report.
-2. **Execute RWDN Recovery Roadmap P1 (Stabilize)** — consolidate the dual-instance
-   Caddy (the #1 single point of failure), capture Hetzner firewall rules,
-   fix Tailscale mesh degradation.
-3. **Phase B (deferred, non-blocking)** — watchdog push emitters (podman/incus/
-   systemd events) per ADR-009 pull-first sequencing.
+1. **Sign-off → TDD** on SPEC-003 v0.2.0 (MCP + `--format json`/exit codes + remediation).
+2. **Layered config system (ADR-018, DEFERRED)** — implement after the "now" tier.
+3. **Apply to RWDN** — model the live RWDN topology into `topology.yaml`, run
+   `rw-blueprint reconcile` against actual infrastructure.
+4. **Execute RWDN Recovery Roadmap P1 (Stabilize)** — consolidate dual-instance Caddy,
+   capture Hetzner firewall rules, fix Tailscale mesh degradation.
 
 ### Blockers / questions
 
-- None. The reconcile layer is complete and green.
+- None blocking. SPEC-003 is awaiting user review after the audit cycle.
 
 ## Reconcile-layer documents (2026-08-27, complete)
 
@@ -83,6 +83,17 @@
   watchdog push architecture, live-state projection contract, osquery-style host
   introspection, and reference projects (tfdrift + driftguard cloned to
   `~/.references/`).
+
+## Gap analysis + ADRs 0013–0018 (2026-08-28)
+
+- **Gap-analysis report**: `docs/research/08-27-2026.Ecosystem_Gap_Analysis_and_Production_Readiness.Infrastructure_Research.001.md`
+  (13 gaps across 3 waves; G3 supply-chain DEFERRED per user).
+- **ADRs 0013–0017** (Proposed): 0013 MCP agent surface · 0014 entry-points probe
+  discovery · 0015 remediation-as-proposal · 0016 schema migration registry · 0017
+  machine-readable drift report + exit codes.
+- **ADR 0018** (Proposed, DEFERRED): layered 5-tier config system + enterprise naming
+  conventions (`RW_BLUEPRINT_` env prefix, `__` nesting delimiter). Grounded in
+  `rw_exfil`/`rw_codegate`/`rw-telebot`/`NexusAgent` precedent.
 
 ## Decision log
 
@@ -104,3 +115,10 @@
 - `[2026-08-27] IMPLEMENTATION: Phase A (pull loop) complete — live_state.py,
   probes.py (incus/podman/port/dns/tailscale), reconciler.py (3-way diff +
   severity + ignore rules), CLI reconcile/probe commands. All gates green.`
+- `[2026-08-28] GAP ANALYSIS: 13 gaps (3 waves). Distribution/supply-chain (G3)
+  deferred until internal adoption succeeds.`
+- `[2026-08-28] ADR-013..017: MCP surface; entry-points probes; remediation-as-
+  proposal; schema migration; machine-readable report + exit codes.`
+- `[2026-08-28] ADR-018 (DEFERRED): layered 5-tier config (CLI > env > user
+  ~/.rw_blueprint > project ./config/ > pydantic defaults) via pydantic-settings;
+  env naming RW_BLUEPRINT_ + __ nesting.`
