@@ -8,6 +8,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from rw_blueprint.config import get_settings
 from rw_blueprint.generator import generate as generate_artifacts
 from rw_blueprint.generator import load_topology
 from rw_blueprint.live_state import LiveState
@@ -51,8 +52,14 @@ def validate(path: str) -> None:
 
 
 @app.command()
-def generate(path: str, output: str = "generated/") -> None:
+def generate(
+    path: str,
+    output: str = typer.Option("", "--output", "-o", help="Output directory (default from config)"),
+) -> None:
     """Generate diagrams, docs, and IaC skeletons from a topology YAML file."""
+    settings = get_settings()
+    if not output:
+        output = settings.output.dir
     try:
         topology = load_topology(path)
     except FileNotFoundError:
@@ -73,7 +80,8 @@ def probe(
     output: str | None = typer.Option(None, "--output", "-o", help="Write live state to JSON file"),
 ) -> None:
     """Run probes and collect live state."""
-    registry = ProbeRegistry()
+    settings = get_settings()
+    registry = ProbeRegistry(timeout=settings.probe.timeout, host_node=settings.host.default_node)
     available = registry.names()
 
     if names:
@@ -142,16 +150,25 @@ def reconcile(
         None, "--output", "-o", help="Write drift report to JSON file"
     ),
     format: str = typer.Option(
-        "table", "--format", "-f", help="Output format: table, json, summary"
+        "", "--format", "-f", help="Output format: table, json, summary (default from config)"
     ),
     fail_on: str = typer.Option(
-        "critical", "--fail-on", help="Exit non-zero on severity: critical, warning, info, none"
+        "",
+        "--fail-on",
+        help="Exit non-zero on severity: critical, warning, info, none (default from config)",
     ),
     remediate: bool = typer.Option(
         False, "--remediate", "-r", help="Generate remediation proposals from drift"
     ),
 ) -> None:
     """Reconcile declared topology against observed live state."""
+    # Resolve config defaults for empty string options
+    settings = get_settings()
+    if not format:
+        format = settings.output.format
+    if not fail_on:
+        fail_on = settings.reconcile.fail_on
+
     # Load topology
     try:
         topo = load_topology(topology)

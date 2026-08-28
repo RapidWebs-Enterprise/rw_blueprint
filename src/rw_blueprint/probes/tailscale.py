@@ -43,7 +43,7 @@ class TailscaleProbe(Probe):
             )
 
         self_node = status.get("Self", {})
-        self_name = self_node.get("HostName", "srv1")
+        self_name = self_node.get("HostName", self.host_node)
 
         # Add the self node
         fragment.nodes.append(

@@ -1,0 +1,38 @@
+# rw_blueprint — Project-safe default configuration
+#
+# This file is versioned in git and provides safe defaults for all settings.
+# Override in ~/.rw_blueprint/config.yaml for user-specific values.
+# Override via RW_BLUEPRINT_* environment variables for deployment-specific values.
+# Override via CLI flags for one-off changes.
+#
+# Precedence (highest wins): CLI > env > user config > this file > code defaults
+
+probe:
+  timeout: 10          # seconds, per-probe command timeout (1-300)
+  enabled:             # probes to run by default (all if empty)
+    - incus
+    - podman
+    - port
+    - dns
+    - tailscale
+
+dns:
+  domains:             # domains to resolve during DNS probe
+    - rapidwebs.org
+    - infra.rapidwebs.org
+
+host:
+  default_node: srv1   # default hostname for locally-running probes
+
+output:
+  dir: generated/      # default output directory for 'generate'
+  format: table        # default reconcile format: table, json, summary
+
+reconcile:
+  fail_on: critical    # default severity threshold: critical, warning, info, none
+
+severity_weights:
+  critical: 3
+  warning: 2
+  info: 1
+  none: 0

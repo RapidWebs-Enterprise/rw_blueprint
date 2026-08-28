@@ -4,7 +4,7 @@
 ## Document Identification
 - **ADR ID**: 018
 - **Title**: Layered configuration system and RapidWebs enterprise naming conventions
-- **Status**: Proposed (implementation deferred — captured to prevent loss)
+- **Status**: Accepted (implemented 2026-08-28)
 - **Date**: 2026-08-28
 - **Author**: Network Systems Specialist
 - **Stakeholders**: Steven (sysop)
@@ -98,9 +98,11 @@
 
 ## 3. Status
 
-Proposed — implementation deferred. This ADR is recorded now so the decision and naming
-contract are not lost; the implementation is sequenced after the "now" tier (ADR-013/015/017)
-because the config layer is a cross-cutting refactor, not a feature.
+Accepted — implemented 2026-08-28. The five-tier config system is live in
+`src/rw_blueprint/config.py` with `pydantic-settings`, `RW_BLUEPRINT_` env prefix,
+`__` nesting, and `./config/defaults.yaml` project defaults. All magic numbers
+extracted: probe timeout, DNS domains, host node, output dir, format, fail_on,
+severity weights.
 
 ## 4. Consequences
 

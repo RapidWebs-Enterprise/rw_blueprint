@@ -22,16 +22,20 @@ class ProbeRegistry:
     It is intentionally simple — no plugin framework, no dynamic loading.
     """
 
-    def __init__(self, probes: list[Probe] | None = None):
+    def __init__(
+        self, probes: list[Probe] | None = None, timeout: int = 10, host_node: str = "srv1"
+    ):
+        self._timeout = timeout
+        self._host_node = host_node
         self._probes = probes or self._default_probes()
 
     def _default_probes(self) -> list[Probe]:
         return [
-            IncusProbe(),
-            PodmanProbe(),
-            PortProbe(),
-            DnsProbe(),
-            TailscaleProbe(),
+            IncusProbe(timeout=self._timeout, host_node=self._host_node),
+            PodmanProbe(timeout=self._timeout, host_node=self._host_node),
+            PortProbe(timeout=self._timeout, host_node=self._host_node),
+            DnsProbe(timeout=self._timeout, host_node=self._host_node),
+            TailscaleProbe(timeout=self._timeout, host_node=self._host_node),
         ]
 
     def names(self) -> list[str]:

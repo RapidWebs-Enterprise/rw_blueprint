@@ -83,7 +83,7 @@ class PodmanProbe(Probe):
 
             service = LiveService(
                 id=name,
-                node="srv1",  # podman runs on the host
+                node=self.host_node,  # podman runs on the host
                 kind=kind,
                 image=image,
                 ports=ports,

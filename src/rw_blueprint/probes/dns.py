@@ -19,7 +19,10 @@ class DnsProbe(Probe):
     def name(self) -> str:
         return "dns"
 
-    def __init__(self, domains: list[str] | None = None):
+    def __init__(
+        self, domains: list[str] | None = None, timeout: int = 10, host_node: str = "srv1"
+    ):
+        super().__init__(timeout=timeout, host_node=host_node)
         self.domains = domains or ["rapidwebs.org", "infra.rapidwebs.org"]
 
     def run(self) -> ProbeResult:
@@ -30,7 +33,7 @@ class DnsProbe(Probe):
         # Add the host node that DNS queries originate from
         fragment.nodes.append(
             LiveNode(
-                id="srv1",
+                id=self.host_node,
                 type="host",
                 provider="local",
                 state="running",
@@ -56,7 +59,7 @@ class DnsProbe(Probe):
                     # Success - create a link showing DNS resolution works
                     link = LiveLink(
                         id=f"dns-{domain}",
-                        **{"from": "srv1"},
+                        **{"from": self.host_node},
                         to=dns_node_id,
                         protocol="dns",
                         observed=True,

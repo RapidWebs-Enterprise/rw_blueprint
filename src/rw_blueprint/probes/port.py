@@ -25,7 +25,7 @@ class PortProbe(Probe):
         # Add the host node that ports are listened on
         fragment.nodes.append(
             LiveNode(
-                id="srv1",
+                id=self.host_node,
                 type="host",
                 provider="local",
                 state="running",
@@ -79,7 +79,7 @@ class PortProbe(Probe):
             link_id = f"port-{local_port}-{proc_name}"
             link = LiveLink(
                 id=link_id,
-                **{"from": "srv1"},
+                **{"from": self.host_node},
                 to=port_node_id,
                 protocol="tcp",
                 observed=True,

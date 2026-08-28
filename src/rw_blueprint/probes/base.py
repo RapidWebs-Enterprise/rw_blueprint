@@ -24,6 +24,10 @@ class ProbeResult:
 class Probe(ABC):
     """Abstract base class for all probes."""
 
+    def __init__(self, timeout: int = 10, host_node: str = "srv1") -> None:
+        self.timeout = timeout
+        self.host_node = host_node
+
     @property
     @abstractmethod
     def name(self) -> str:
@@ -33,8 +37,9 @@ class Probe(ABC):
     def run(self) -> ProbeResult:
         """Execute the probe and return a fragment."""
 
-    def _run_cmd(self, cmd: list[str], timeout: int = 10) -> tuple[int, str, str]:
+    def _run_cmd(self, cmd: list[str], timeout: int | None = None) -> tuple[int, str, str]:
         """Run a command and return (exit_code, stdout, stderr)."""
+        timeout = timeout if timeout is not None else self.timeout
         try:
             result = subprocess.run(  # noqa: S603
                 cmd,
