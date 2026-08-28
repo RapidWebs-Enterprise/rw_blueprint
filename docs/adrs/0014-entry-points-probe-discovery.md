@@ -4,7 +4,7 @@
 ## Document Identification
 - **ADR ID**: 014
 - **Title**: Entry-points probe discovery for third-party extensibility
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-08-27
 - **Author**: Network Systems Specialist
 - **Stakeholders**: Steven (sysop)

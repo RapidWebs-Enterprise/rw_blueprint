@@ -5,29 +5,94 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
+    name: test (py${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install
-        run: uv sync --group dev
-      - name: Lint
+
+      - name: Sync dependencies
+        run: uv sync --group dev --group mcp
+
+      - name: Lint (ruff)
         run: uv run ruff check .
-      - name: Format check
+
+      - name: Format check (ruff)
         run: uv run ruff format --check .
-      - name: Type check
+
+      - name: Type check (mypy strict)
         run: uv run mypy
-      - name: Test
-        run: uv run pytest --cov --cov-report=xml
+
+      - name: Test (pytest + coverage)
+        run: uv run pytest --cov --cov-report=xml --cov-report=term
+
       - name: Upload coverage
+        if: matrix.python-version == '3.12'
         uses: codecov/codecov-action@v5
         with:
           files: coverage.xml
           fail_ci_if_error: false
+
+  build:
+    name: build + entry-point smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Sync
+        run: uv sync --group dev --group mcp
+
+      - name: Build wheel + sdist
+        run: uv build
+
+      - name: Tool install smoke test
+        run: |
+          uv tool install --force dist/*.whl
+          rw-blueprint --help
+          rw-blueprint validate --help
+          rw-blueprint generate --help
+          rw-blueprint probe --help
+          rw-blueprint reconcile --help
+          rw-blueprint mcp --help
+          rw-blueprint-mcp --help
+
+  security:
+    name: security audits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Sync
+        run: uv sync --group dev
+
+      - name: Vulnerability scan (pip-audit)
+        run: |
+          uv tool install pip-audit
+          pip-audit --strict
+
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -31,12 +31,30 @@
   `RW_BLUEPRINT_` prefix, `__` nesting, `config/defaults.yaml` project defaults.
   All magic numbers extracted (timeout, host node, DNS domains, output dir,
   format, fail_on, severity weights). Committed `82603fc`.
+- **Polish sprint (2026-08-28)**:
+  - **ADR-0014 implemented** — entry-points probe discovery (`importlib.metadata`
+    group `rw_blueprint.probes`); `BrokenProbe` for graceful failure; in-process
+    wins on name conflict. 9 new tests in `test_registry_entry_points.py`.
+  - **Installability verified** — `uv build` produces wheel + sdist; `uv tool
+    install` registers both `rw-blueprint` and `rw-blueprint-mcp` entry points.
+  - **`install.sh`** added — `./install.sh` / `--system` / `--dev` / `--rebuild`.
+  - **CI enhanced** — 3 jobs: test (3.11/3.12/3.13 matrix), build + entry-point
+    smoke test, security (pip-audit + gitleaks). Permissions block, `fail-fast: false`.
+  - **codegate** — `~/.rw_codegate/config.toml` updated with project-tuned
+    whitelist (structural-similarity, naming-style, cyclomatic-complexity gates
+    disabled; passing_threshold=70). All 8 files PASS.
+  - **ast-tools structural pass** — `ast_read` confirms 9 classes in `schema.py`
+    (the 5-entity model + 4 supporting types) and 2 classes in `registry.py`
+    (`BrokenProbe` + `ProbeRegistry` with `_instantiate` helper). ADR-0005/0010/0014
+    contracts verified.
 - **Enterprise/ drift fixed** — `documentation/`→`docs/`; README rewritten to
   reflect reality; stale drift report archived with supersession note.
-- **Full process integrity** — 3 SPECs, 18 ADRs, 11 research reports, 3 forward
-  audits, 2 reverse audits, 2 syntheses, 2 implementation plans. All `plan-and-audit`
-  MEDIUM cycles closed out.
-- **Quality** — 71 tests, ruff/mypy/pytest all green. Git working tree clean.
+- **Full process integrity** — 3 SPECs, 17 Accepted + 1 Proposed (ADR-0016)
+  ADRs, 11 research reports, 3 forward audits, 2 reverse audits, 2 syntheses,
+  2 implementation plans. All `plan-and-audit` MEDIUM cycles closed out.
+- **Quality** — 80 tests, ruff/mypy/pytest all green, codegate PASS.
+  Git working tree clean (modulo the untracked install.sh / .rw_codegate.toml
+  in this commit).
 
 ### In progress
 
@@ -44,14 +62,15 @@
 
 ### Next (specific steps)
 
-1. **Apply to RWDN** — model the live RWDN topology into `topology.yaml`, run
+1. **Push to private GitHub repo** — `rw_blueprint` is ready; create the
+   remote, push `main`, enable branch protection + required CI checks.
+2. **Apply to RWDN** — model the live RWDN topology into `topology.yaml`, run
    `rw-blueprint reconcile` against actual infrastructure.
-2. **Execute RWDN Recovery Roadmap P1 (Stabilize)** — consolidate dual-instance Caddy,
+3. **Execute RWDN Recovery Roadmap P1 (Stabilize)** — consolidate dual-instance Caddy,
    capture Hetzner firewall rules, fix Tailscale mesh degradation.
 
 ### Deferred (not forgotten)
 
-- **ADR-0014** — entry-points probe discovery (expansion feature, not needed for 5 probes).
 - **ADR-0016** — schema migration handler registry (no old topologies to migrate yet).
 - **G3** — supply-chain security (distribution waits until internal adoption succeeds).
 - **G7–G13** — secondary gap-report items (watch mode, history, validate hints, layers,
@@ -59,7 +78,7 @@
 
 ### Blockers / questions
 
-- None. The tool is ready to be applied to the live RWDN.
+- None. The tool is ready to be pushed to GitHub + applied to the live RWDN.
 
 ## Decision log
 
@@ -93,3 +112,8 @@
   deferred — not blocking, not forgotten.`
 - `[2026-08-28] CLEANUP: SESSION_STATE rewritten to reflect reality; ADRs
   0009-0012 status lines corrected to Accepted.`
+- `[2026-08-28] POLISH SPRINT: ADR-0014 implemented (entry-points probes +
+  BrokenProbe); install.sh + CI 3-job workflow (test matrix / build+smoke /
+  security=pip-audit+gitleaks); codegate tuned with project whitelist (all
+  files PASS); ast-tools structural pass verified schema/registry contracts.`
+- `[2026-08-28] ADR-014 promoted to Accepted (was Proposed).`

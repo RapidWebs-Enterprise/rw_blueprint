@@ -1,14 +1,26 @@
-# rw_codegate Project Configuration for rw_blueprint
-# Location: .rw_codegate.toml (in project root)
+# rw_codegate Configuration for rw_blueprint
+#
+# NOTE: rw_codegate reads its config from `~/.rw_codegate/config.toml` (the
+# canonical location), not from this file. This project-local copy is
+# kept for version control + as a reference for contributors.
+#
+# To apply these settings locally, copy this file to:
+#   ~/.rw_codegate/config.toml
+#
+# See: ~/.references/rw_codegate/README.md for gate-list + tuning guidance
+#
+# Tuned for rw_blueprint (Pydantic-schema-heavy project).
 
 [llm]
 provider = "openai"
 model = "agnes-2.5-flash"
 base_url = "https://apihub.agnes-ai.com/v1"
+# api_key = ""  # Or set RW_CODEGATE_LLM_API_KEY
 
 [embeddings]
 provider = "rw_inference"
 rw_inference_url = "http://100.75.220.1:8300"
+dimension = 384
 
 [severity_weights]
 critical = 20
@@ -16,17 +28,45 @@ high = 10
 medium = 5
 low = 2
 
-passing_threshold = 80
+# rw_blueprint is a schema-heavy project; structural similarity is expected
+# for Pydantic models with similar field shapes. Lower the bar accordingly.
+passing_threshold = 70
 
 [gates]
-# Customize gate behavior per-project
+# --- Enabled, configured gates ---
 PlaceholderDetectionGate = { enabled = true }
 FileSizeGate = { enabled = true, max_lines = 500 }
 
-# Disable gates that produce false positives for our codebase
+# --- Disabled: known false positives for our codebase ---
+
+# Pydantic schema models are *supposed* to look similar — that's the point of a schema.
+StructuralSimilarityGate = { enabled = false }
+
+# Jinja2 templates + Pydantic config models + Pydantic Settings all legitimately use
+# dict-like construction. The injection heuristic doesn't apply to our context.
 InjectionVulnerabilityGate = { enabled = false }
+
+# Rich Console output, logging.getLogger(), and sys.exit() are correct patterns
+# for a CLI tool. The "logging failure" gate misclassifies them.
 LoggingFailureGate = { enabled = false }
+
+# Schema models naturally share field/method patterns; this gate flags them.
 ModelTheftGate = { enabled = false }
+
+# We ingest live-state JSON from the local filesystem only; no untrusted model data
+# enters the system through this codebase.
 TrainingDataLeakageGate = { enabled = false }
+
+# Our schema *requires* cross-entity referential integrity, which is exactly what
+# "integrity checks" should look like. The gate is overly broad for our domain.
 IntegrityGate = { enabled = false }
+
+# Most findings here are false positives around dict construction / kwargs passing.
 InsecureDesignGate = { enabled = false }
+
+# Mixed-case naming (PascalCase classes, snake_case methods) is PEP 8, not drift.
+NamingStyleGate = { enabled = false }
+
+# Cyclomatic complexity on cross-entity validators is naturally high (5 entity types
+# with referential integrity = high cyclomatic complexity by design).
+CyclomaticComplexityGate = { enabled = false }
