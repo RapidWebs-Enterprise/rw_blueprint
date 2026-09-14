@@ -1,0 +1,253 @@
+# RapidWebs Distributed Network — Canonical Topology
+# Generated from live probe data (2026-09-14)
+# This is the single source of truth for all RWDN operations.
+schema_version: "0.2"
+metadata:
+  name: rapidwebs-rwdn
+  description: |
+    RapidWebs Distributed Network — the production infrastructure
+    supporting all RapidWebs services, agents, and tooling.
+    Hosted on Hetzner CX32 (srv1) with three Incus containers
+    (infra, enterprise, dev) forming a Tailscale mesh.
+  updated: 2026-09-14
+zones:
+  - id: edge
+    name: Edge
+  - id: infra
+    name: Infrastructure
+  - id: enterprise
+    name: Enterprise
+  - id: dev
+    name: Development
+nodes:
+  # External entities
+  - id: cloudflare
+    zone: edge
+    type: external
+  - id: rapidwebs-org
+    zone: edge
+    type: external
+
+  # Physical host
+  - id: srv1
+    zone: edge
+    type: host
+    provider: hetzner
+    public_ip: 89.167.54.98
+    tailscale_ip: 100.64.94.58
+
+  # Incus containers on srv1
+  - id: infra
+    zone: infra
+    type: container
+    host: srv1
+    tailscale_ip: 100.79.58.118
+    cpu: 4
+    memory: 4GiB
+    nic: incbr0
+
+  - id: enterprise
+    zone: enterprise
+    type: container
+    host: srv1
+    tailscale_ip: 100.65.82.48
+    cpu: 4
+    memory: 4GiB
+    nic: incbr0
+
+  - id: dev
+    zone: dev
+    type: container
+    host: srv1
+    tailscale_ip: 100.127.203.36
+    cpu: 3
+    memory: 5GiB
+    nic: incbr0
+
+  # Workstation (local)
+  - id: rw-workstation-01
+    zone: edge
+    type: host
+    provider: local
+services:
+  # Infra container services (via podman)
+  - id: pgvector
+    node: infra
+    kind: database
+    image: docker.io/pgvector/pgvector:pg16
+    ports:
+      - port: 5432
+    managed_by: quadlet
+
+  - id: honcho-api
+    node: infra
+    kind: application
+    image: docker.io/rapidwebs/honcho:latest
+    ports:
+      - port: 8000
+    managed_by: quadlet
+
+  - id: rw-inference-engine
+    node: infra
+    kind: application
+    image: local/rw-inference-engine:latest
+    ports:
+      - port: 8300
+    managed_by: quadlet
+
+  # Enterprise container services
+  - id: portainer
+    node: enterprise
+    kind: observability
+    ports:
+      - port: 9443
+        public: 9443
+    managed_by: quadlet
+
+  # Network services
+  - id: caddy
+    node: infra
+    kind: proxy
+    ports:
+      - port: 80
+      - port: 443
+    managed_by: systemd
+
+  - id: knots-dns
+    node: infra
+    kind: dns
+    ports:
+      - port: 53
+        protocol: tcp
+      - port: 53
+        protocol: udp
+    managed_by: systemd
+
+  - id: postfix
+    node: infra
+    kind: messaging
+    ports:
+      - port: 25
+      - port: 465
+      - port: 587
+    managed_by: systemd
+
+  - id: dovecot
+    node: infra
+    kind: messaging
+    ports:
+      - port: 143
+      - port: 993
+    managed_by: systemd
+
+  - id: rspamd
+    node: infra
+    kind: application
+    ports:
+      - port: 11332
+    managed_by: systemd
+
+  # SeaweedFS distributed storage
+  - id: seaweedfs
+    node: infra
+    kind: storage
+    ports:
+      - port: 8888
+    managed_by: systemd
+
+  # Agent gateways
+  - id: agentgateway
+    node: infra
+    kind: application
+    ports:
+      - port: 8080
+    managed_by: systemd
+links:
+  # External connectivity
+  - id: cloudflare-to-srv1
+    from: cloudflare
+    to: srv1
+    protocol: https
+
+  # Tailscale mesh (all-to-all)
+  - id: srv1-to-infra
+    from: srv1
+    to: infra
+    protocol: wireguard
+
+  - id: srv1-to-enterprise
+    from: srv1
+    to: enterprise
+    protocol: wireguard
+
+  - id: srv1-to-dev
+    from: srv1
+    to: dev
+    protocol: wireguard
+
+  - id: infra-to-enterprise
+    from: infra
+    to: enterprise
+    protocol: wireguard
+
+  - id: infra-to-dev
+    from: infra
+    to: dev
+    protocol: wireguard
+
+  - id: enterprise-to-dev
+    from: enterprise
+    to: dev
+    protocol: wireguard
+
+  # Workstation connectivity
+  - id: workstation-to-srv1
+    from: rw-workstation-01
+    to: srv1
+    protocol: wireguard
+
+  - id: workstation-to-infra
+    from: rw-workstation-01
+    to: infra
+    protocol: wireguard
+
+  - id: workstation-to-enterprise
+    from: rw-workstation-01
+    to: enterprise
+    protocol: wireguard
+
+  - id: workstation-to-dev
+    from: rw-workstation-01
+    to: dev
+    protocol: wireguard
+dependencies:
+  # Service dependencies (startup ordering + blast radius)
+  - id: honcho-requires-pgvector
+    from: honcho-api
+    to: pgvector
+    type: requires
+
+  - id: honcho-requires-inference
+    from: honcho-api
+    to: rw-inference-engine
+    type: requires
+
+  - id: agentgateway-requires-honcho
+    from: agentgateway
+    to: honcho-api
+    type: requires
+
+  - id: caddy-requires-agentgateway
+    from: caddy
+    to: agentgateway
+    type: requires
+
+  - id: postfix-requires-dns
+    from: postfix
+    to: knots-dns
+    type: requires
+
+  - id: dovecot-requires-dns
+    from: dovecot
+    to: knots-dns
+    type: requires

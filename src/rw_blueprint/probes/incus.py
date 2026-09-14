@@ -1,4 +1,4 @@
-"""Incus probe - observes Incus containers via ``incus list --format json``."""
+"""Incus probe - observes Incus containers via `incus list --format json`."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from rw_blueprint.probes.base import Probe, ProbeResult
 
 
 class IncusProbe(Probe):
-    """Probe Incus containers via ``incus list --format json``."""
+    """Probe Incus containers via `incus list --format json`."""
 
     @property
     def name(self) -> str:
@@ -22,15 +22,19 @@ class IncusProbe(Probe):
         errors: list[str] = []
         fragment = LiveStateFragment()
 
+        # Try local incus first, then remote via SSH
         exit_code, stdout, stderr = self._run_cmd(["incus", "list", "--format", "json"])
         if exit_code != 0:
-            errors.append(f"incus list failed: {stderr}")
-            return ProbeResult(
-                name=self.name,
-                fragment=fragment,
-                errors=errors,
-                duration_ms=int((datetime.now() - start).total_seconds() * 1000),
-            )
+            # Fall back to remote SSH access
+            exit_code, stdout, stderr = self._run_cmd(["ssh", self.host_node, "incus list --format json"])
+            if exit_code != 0:
+                errors.append(f"incus list failed: {stderr}")
+                return ProbeResult(
+                    name=self.name,
+                    fragment=fragment,
+                    errors=errors,
+                    duration_ms=int((datetime.now() - start).total_seconds() * 1000),
+                )
 
         try:
             containers = json.loads(stdout)
