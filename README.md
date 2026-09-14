@@ -1,48 +1,57 @@
 # rw_blueprint
 
-Declarative infrastructure source-of-truth engine.
+Declarative YAML topology engine for RapidWebs infrastructure with drift detection, validation, and remediation.
 
-`rw_blueprint` turns a single canonical YAML model of your infrastructure into
-generated artifacts — topology diagrams, documentation, and IaC skeletons — so
-that humans, reproducibility tooling, and autonomous agents all read from the
-same objective source of truth.
+## Features
 
-## Why
+- **Validate** — Check topology YAML against defined schema
+- **Generate** — Produce Kubernetes manifests, docs, and configs from topology
+- **Probe** — Run live infrastructure probes (ports, Incus, SSH)
+- **Reconcile** — Detect drift between declared topology and live state
+- **Remediate** — Propose and apply fixes for identified drift
 
-Infrastructure documentation drifts. Multiple hand-written markdown files
-describing the same system inevitably disagree, and agents reasoning against
-stale prose faithfully reproduce the drift. `rw_blueprint` inverts the model:
-the YAML file is the source of truth, and every diagram, doc, and config is
-*derived* from it — never hand-edited, never stale.
-
-## What it does
-
-```
-topology.yaml  (canonical, git-versioned, agent-readable)
-      |
-      +-- validate   (schema check, no dangling references)
-      +-- generate   (Mermaid diagrams, markdown docs, quadlet units)
-      +-- diff       (compare model against live state -> drift report)
-```
-
-## Quick start
+## Quick Start
 
 ```bash
-pip install -e ".[dev]"
-rw-blueprint validate examples/topology.yaml
-rw-blueprint generate examples/topology.yaml --output generated/
+# Install
+pip install -e ".[mcp]"
+
+# Validate topology
+rw-blueprint validate topology.yaml
+
+# Generate artifacts
+rw-blueprint generate topology.yaml --output docs/
+
+# Run live probes
+rw-blueprint probe --output live.json
+
+# Reconcile drift
+rw-blueprint reconcile topology.yaml live.json --format json
 ```
 
-## Documentation
+## RWDN Topology
 
-- [Getting started](docs/getting-started/README.md)
-- [Architecture](docs/architecture/README.md)
-- [Specifications](docs/specs/)
-- [ADRs](docs/adrs/)
-- [API reference](docs/api/)
-- [Guides](docs/guides/)
-- [Research](docs/research/)
+Captures the full RapidWebs deployment network:
+- 7 nodes (srv1, infra, enterprise, dev, workstation, cloudflare, domain)
+- 11 services (honcho, postgres, inference, caddy, DNS, mail, storage)
+- 13 links (Tailscale mesh, Cloudflare origin, DNS)
+- 6 dependencies
 
-## License
+## MCP Server
 
-[MIT](LICENSE)
+```bash
+rw-blueprint-mcp
+```
+
+Provides 4 tools + 2 resources for topology management via Model Context Protocol.
+
+## Architecture
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for full design documentation.
+
+## Testing
+
+```bash
+uv run pytest
+# 80 tests passing
+```
