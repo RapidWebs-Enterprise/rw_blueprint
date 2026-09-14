@@ -1,7 +1,7 @@
 {
   "schema_version": "0.2",
   "metadata": {
-    "captured_at": "2026-09-14T19:02:09.166127",
+    "captured_at": "2026-09-14T19:06:30.524107",
     "captured_by": "rw_blueprint",
     "schema_version": "0.2"
   },
@@ -172,7 +172,17 @@
       "state": "running"
     }
   ],
-  "services": [],
+  "services": [
+    {
+      "id": "portainer",
+      "node": "dev",
+      "kind": "application",
+      "image": "docker.io/portainer/portainer-ce:latest",
+      "ports": [],
+      "managed_by": "manual",
+      "state": "running"
+    }
+  ],
   "links": [
     {
       "id": "port-27541-unknown",

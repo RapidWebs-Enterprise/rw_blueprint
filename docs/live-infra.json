@@ -1,7 +1,7 @@
 {
   "schema_version": "0.2",
   "metadata": {
-    "captured_at": "2026-09-14T19:02:06.265797",
+    "captured_at": "2026-09-14T19:06:26.816246",
     "captured_by": "rw_blueprint",
     "schema_version": "0.2"
   },
@@ -172,7 +172,53 @@
       "state": "running"
     }
   ],
-  "services": [],
+  "services": [
+    {
+      "id": "rw-inference-engine",
+      "node": "infra",
+      "kind": "application",
+      "image": "localhost/rw-inference-engine:latest",
+      "ports": [],
+      "managed_by": "manual",
+      "state": "stopped"
+    },
+    {
+      "id": "caddy",
+      "node": "infra",
+      "kind": "application",
+      "image": "localhost/caddy-cloudflare:latest",
+      "ports": [],
+      "managed_by": "manual",
+      "state": "stopped"
+    },
+    {
+      "id": "rw-inference-infra",
+      "node": "infra",
+      "kind": "application",
+      "image": "localhost/rw-inference-engine:latest",
+      "ports": [],
+      "managed_by": "quadlet",
+      "state": "running"
+    },
+    {
+      "id": "honcho-db",
+      "node": "infra",
+      "kind": "application",
+      "image": "docker.io/pgvector/pgvector:pg15",
+      "ports": [],
+      "managed_by": "manual",
+      "state": "running"
+    },
+    {
+      "id": "honcho-api",
+      "node": "infra",
+      "kind": "application",
+      "image": "localhost/honcho:latest",
+      "ports": [],
+      "managed_by": "manual",
+      "state": "running"
+    }
+  ],
   "links": [
     {
       "id": "port-27541-unknown",

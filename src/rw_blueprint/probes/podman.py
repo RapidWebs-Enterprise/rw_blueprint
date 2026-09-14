@@ -42,6 +42,18 @@ class PodmanProbe(Probe):
                 timeout=self.timeout,
             )
 
+        # If still empty or failed, try with sudo (for rootful containers on remote hosts)
+        if exit_code == 0 and stdout and stdout.strip() == "[]":
+            exit_code2, stdout2, stderr2 = run_remote_cmd(
+                self.host_node,
+                ["sudo", "podman", "ps", "--all", "--format", "json"],
+                timeout=self.timeout,
+            )
+            if exit_code2 == 0 and stdout2:
+                stdout = stdout2
+                stderr = stderr2
+                exit_code = exit_code2
+
         if exit_code != 0:
             errors.append(f"podman ps failed: {stderr}")
             return ProbeResult(
@@ -78,7 +90,7 @@ class PodmanProbe(Probe):
 
             # Parse ports
             ports: list[LivePort] = []
-            for p in c.get("Ports", []):
+            for p in c.get("Ports") or []:
                 if p.get("PublicPort"):
                     ports.append(
                         LivePort(
@@ -89,7 +101,7 @@ class PodmanProbe(Probe):
                     )
 
             # Determine managed_by from labels
-            labels = c.get("Labels", {})
+            labels = c.get("Labels") or {}
             managed_by: ManagedBy = "manual"
             if labels.get("io.containers.autoupdate") == "registry":
                 managed_by = "quadlet"
