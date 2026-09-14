@@ -1,13 +1,20 @@
-"""Incus probe - observes Incus containers via `incus list --format json`."""
+"""Incus probe - observes Incus containers via `incus list --format json`.
+
+Supports both local and remote (SSH) execution.
+"""
 
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime
 from typing import Literal
 
 from rw_blueprint.live_state import LiveNode, LiveStateFragment
 from rw_blueprint.probes.base import Probe, ProbeResult
+from rw_blueprint.probes.ssh import run_local_cmd, run_remote_cmd
+
+_logger = logging.getLogger(__name__)
 
 
 class IncusProbe(Probe):
@@ -23,18 +30,25 @@ class IncusProbe(Probe):
         fragment = LiveStateFragment()
 
         # Try local incus first, then remote via SSH
-        exit_code, stdout, stderr = self._run_cmd(["incus", "list", "--format", "json"])
+        exit_code, stdout, stderr = run_local_cmd(["incus", "list", "--format", "json"])
+
         if exit_code != 0:
             # Fall back to remote SSH access
-            exit_code, stdout, stderr = self._run_cmd(["ssh", self.host_node, "incus list --format json"])
-            if exit_code != 0:
-                errors.append(f"incus list failed: {stderr}")
-                return ProbeResult(
-                    name=self.name,
-                    fragment=fragment,
-                    errors=errors,
-                    duration_ms=int((datetime.now() - start).total_seconds() * 1000),
-                )
+            _logger.info("Local incus failed, trying SSH to %s", self.host_node)
+            exit_code, stdout, stderr = run_remote_cmd(
+                self.host_node,
+                ["incus", "list", "--format", "json"],
+                timeout=self.timeout,
+            )
+
+        if exit_code != 0:
+            errors.append(f"incus list failed: {stderr}")
+            return ProbeResult(
+                name=self.name,
+                fragment=fragment,
+                errors=errors,
+                duration_ms=int((datetime.now() - start).total_seconds() * 1000),
+            )
 
         try:
             containers = json.loads(stdout)

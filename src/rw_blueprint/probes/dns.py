@@ -1,15 +1,22 @@
-"""DNS probe - observes DNS resolution via ``kdig`` or ``dig``."""
+"""DNS probe - observes DNS resolution via ``kdig`` or ``dig``.
+
+Supports both local and remote (SSH) execution.
+"""
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import TYPE_CHECKING
 
 from rw_blueprint.live_state import LiveLink, LiveNode, LiveStateFragment
 from rw_blueprint.probes.base import Probe, ProbeResult
+from rw_blueprint.probes.ssh import run_local_cmd, run_remote_cmd
 
 if TYPE_CHECKING:
     from rw_blueprint.live_state import LiveStateFragment
+
+_logger = logging.getLogger(__name__)
 
 
 class DnsProbe(Probe):
@@ -54,7 +61,17 @@ class DnsProbe(Probe):
 
             # Try kdig first, fall back to dig
             for cmd in [["kdig", "+short", domain], ["dig", "+short", domain]]:
-                exit_code, stdout, stderr = self._run_cmd(cmd)
+                exit_code, stdout, stderr = run_local_cmd(cmd)
+
+                if exit_code != 0:
+                    # Try via SSH
+                    _logger.info("DNS query failed locally, trying SSH to %s", self.host_node)
+                    exit_code, stdout, stderr = run_remote_cmd(
+                        self.host_node,
+                        cmd,
+                        timeout=self.timeout,
+                    )
+
                 if exit_code == 0 and stdout.strip():
                     # Success - create a link showing DNS resolution works
                     link = LiveLink(

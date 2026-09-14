@@ -1,14 +1,21 @@
-"""Podman probe - observes podman containers via ``podman ps --format json``."""
+"""Podman probe - observes podman containers via ``podman ps --format json``.
+
+Supports both local and remote (SSH) execution.
+"""
 
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime
 from typing import Literal
 
 from rw_blueprint.live_state import LivePort, LiveService, LiveStateFragment
 from rw_blueprint.probes.base import Probe, ProbeResult
+from rw_blueprint.probes.ssh import run_local_cmd, run_remote_cmd
 from rw_blueprint.schema import ManagedBy, ServiceKind
+
+_logger = logging.getLogger(__name__)
 
 
 class PodmanProbe(Probe):
@@ -23,7 +30,18 @@ class PodmanProbe(Probe):
         errors: list[str] = []
         fragment = LiveStateFragment()
 
-        exit_code, stdout, stderr = self._run_cmd(["podman", "ps", "--all", "--format", "json"])
+        # Try local first, then SSH
+        exit_code, stdout, stderr = run_local_cmd(["podman", "ps", "--all", "--format", "json"])
+
+        if exit_code != 0:
+            # Fall back to remote SSH
+            _logger.info("Local podman failed, trying SSH to %s", self.host_node)
+            exit_code, stdout, stderr = run_remote_cmd(
+                self.host_node,
+                ["podman", "ps", "--all", "--format", "json"],
+                timeout=self.timeout,
+            )
+
         if exit_code != 0:
             errors.append(f"podman ps failed: {stderr}")
             return ProbeResult(
@@ -83,7 +101,7 @@ class PodmanProbe(Probe):
 
             service = LiveService(
                 id=name,
-                node=self.host_node,  # podman runs on the host
+                node=self.host_node,
                 kind=kind,
                 image=image,
                 ports=ports,

@@ -13,6 +13,7 @@ from rw_blueprint.generator import generate as generate_artifacts
 from rw_blueprint.generator import load_topology
 from rw_blueprint.live_state import LiveState
 from rw_blueprint.probes import ProbeRegistry
+from rw_blueprint.probes.multi_node import MultiNodeProbeCoordinator, TargetNode
 from rw_blueprint.reconciler import (
     DriftCategory,
     DriftReport,
@@ -32,6 +33,13 @@ app = typer.Typer(
 
 console = Console()
 err_console = Console(stderr=True)
+
+
+def make_probe(name: str, registry):
+    """Factory that returns a probe constructor given a name and registry."""
+    def factory(timeout, host_node):
+        return registry.get(name).__class__(timeout=timeout, host_node=host_node)
+    return factory
 
 
 @app.command()
@@ -78,10 +86,29 @@ def generate(
 def probe(
     names: list[str] | None = None,
     output: str | None = typer.Option(None, "--output", "-o", help="Write live state to JSON file"),
+    nodes: str | None = typer.Option(None, "--nodes", "-n", help="Target nodes to probe (comma-separated)"),
 ) -> None:
     """Run probes and collect live state."""
     settings = get_settings()
-    registry = ProbeRegistry(timeout=settings.probe.timeout, host_node=settings.host.default_node)
+
+    # Build target nodes from CLI args or topology
+    target_nodes = []
+    if nodes:
+        # Parse comma-separated node list
+        for node_id in nodes.split(","):
+            node_id = node_id.strip()
+            if node_id:
+                target_nodes.append(TargetNode(id=node_id))
+    else:
+        # Default: probe the default host node
+        target_nodes.append(TargetNode(id=settings.host.default_node))
+    
+    coordinator = MultiNodeProbeCoordinator(
+        targets=target_nodes,
+        default_timeout=settings.probe.timeout,
+    )
+    
+    registry = ProbeRegistry(timeout=settings.probe.timeout)
     available = registry.names()
 
     if names:
@@ -90,13 +117,59 @@ def probe(
             err_console.print(f"[red]Unknown probes:[/red] {', '.join(invalid)}")
             err_console.print(f"Available: {', '.join(available)}")
             raise typer.Exit(code=2)
-        fragment, results = registry.run_selected(names)
+        
+        # Run selected probes across all target nodes
+        merged_fragment = None
+        all_results = {}
+        
+        for probe_name in names:
+            factory = make_probe(probe_name, registry)
+
+            fragment, per_node_results = coordinator.run_probe_on_targets(
+                probe_factory=factory,
+                probe_name=probe_name,
+            )
+            all_results[probe_name] = per_node_results
+            if merged_fragment is None:
+                merged_fragment = fragment
+            else:
+                merged_fragment = merged_fragment.merge(fragment)
+        
+        # Flatten per-node results for display
+        flat_results = {}
+        for probe_name, node_results in all_results.items():
+            for node_id, result in node_results.items():
+                flat_results[f"{probe_name}@{node_id}"] = result
+        
+        fragment = merged_fragment
     else:
-        fragment, results = registry.run_all()
+        # Run all probes
+        merged_fragment = None
+        all_results = {}
+        
+        for probe_name in available:
+            factory = make_probe(probe_name, registry)
+            
+            fragment, per_node_results = coordinator.run_probe_on_targets(
+                probe_factory=factory,
+                probe_name=probe_name,
+            )
+            all_results[probe_name] = per_node_results
+            if merged_fragment is None:
+                merged_fragment = fragment
+            else:
+                merged_fragment = merged_fragment.merge(fragment)
+        
+        # Flatten per-node results for display
+        flat_results = {}
+        for probe_name, node_results in all_results.items():
+            for node_id, result in node_results.items():
+                flat_results[f"{probe_name}@{node_id}"] = result
+        
+        fragment = merged_fragment
 
     # Build a LiveState from the fragment (with minimal metadata)
     from datetime import datetime
-
     from rw_blueprint.live_state import LiveMetadata
 
     live_state = LiveState(
@@ -121,7 +194,7 @@ def probe(
     table.add_column("Errors")
     table.add_column("Duration (ms)")
 
-    for name, result in results.items():
+    for name, result in flat_results.items():
         status = "[green]OK[/green]" if not result.errors else "[red]ERROR[/red]"
         table.add_row(
             name,
@@ -135,7 +208,7 @@ def probe(
 
     console.print(table)
 
-    if any(r.errors for r in results.values()):
+    if any(r.errors for r in flat_results.values()):
         raise typer.Exit(code=2)
 
 
@@ -321,7 +394,7 @@ def _print_remediation(plan: object) -> None:
 
     if not isinstance(plan, RemediationPlan):
         err_console.print("[red]Internal error:[/red] expected RemediationPlan")
-        raise typer.Exit(code=2)
+        raise typer.Exit(code=2) from None
 
     if not plan.proposals:
         console.print("[green]No remediation needed[/green]")

@@ -1,0 +1,700 @@
+{
+  "report_version": "0.1",
+  "topology_file": "topology.yaml",
+  "live_state_file": "docs/live.json",
+  "generated_at": "2026-09-14T17:59:09.449858",
+  "schema_version": "0.2",
+  "summary": {
+    "total": 79,
+    "critical": 22,
+    "warning": 24,
+    "info": 33,
+    "ignored": 0,
+    "missing": 34,
+    "extra": 23,
+    "mismatched": 22
+  },
+  "items": [
+    {
+      "category": "missing",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "cloudflare",
+      "message": "Node 'cloudflare' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "dev",
+      "field": "type",
+      "declared": "container",
+      "observed": "host",
+      "message": "Node 'dev' field 'type' differs: declared=container, observed=host",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "dev",
+      "field": "provider",
+      "observed": "tailscale",
+      "message": "Node 'dev' field 'provider' differs: declared=None, observed=tailscale",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "dev",
+      "field": "tailscale_ip",
+      "declared": "100.127.203.36",
+      "message": "Node 'dev' field 'tailscale_ip' differs: declared=100.127.203.36, observed=None",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "dev",
+      "field": "host",
+      "declared": "srv1",
+      "message": "Node 'dev' field 'host' differs: declared=srv1, observed=None",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "dev",
+      "field": "cpu",
+      "declared": 3,
+      "message": "Node 'dev' field 'cpu' differs: declared=3, observed=None",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "dev",
+      "field": "memory",
+      "declared": "5GiB",
+      "message": "Node 'dev' field 'memory' differs: declared=5GiB, observed=None",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "node",
+      "entity_id": "dns:infra.rapidwebs.org",
+      "message": "Node 'dns:infra.rapidwebs.org' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "node",
+      "entity_id": "dns:rapidwebs.org",
+      "message": "Node 'dns:rapidwebs.org' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "enterprise",
+      "field": "type",
+      "declared": "container",
+      "observed": "host",
+      "message": "Node 'enterprise' field 'type' differs: declared=container, observed=host",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "enterprise",
+      "field": "provider",
+      "observed": "tailscale",
+      "message": "Node 'enterprise' field 'provider' differs: declared=None, observed=tailscale",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "enterprise",
+      "field": "tailscale_ip",
+      "declared": "100.65.82.48",
+      "message": "Node 'enterprise' field 'tailscale_ip' differs: declared=100.65.82.48, observed=None",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "enterprise",
+      "field": "host",
+      "declared": "srv1",
+      "message": "Node 'enterprise' field 'host' differs: declared=srv1, observed=None",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "enterprise",
+      "field": "cpu",
+      "declared": 4,
+      "message": "Node 'enterprise' field 'cpu' differs: declared=4, observed=None",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "enterprise",
+      "field": "memory",
+      "declared": "4GiB",
+      "message": "Node 'enterprise' field 'memory' differs: declared=4GiB, observed=None",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "infra",
+      "field": "type",
+      "declared": "container",
+      "observed": "host",
+      "message": "Node 'infra' field 'type' differs: declared=container, observed=host",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "infra",
+      "field": "provider",
+      "observed": "tailscale",
+      "message": "Node 'infra' field 'provider' differs: declared=None, observed=tailscale",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "infra",
+      "field": "tailscale_ip",
+      "declared": "100.79.58.118",
+      "message": "Node 'infra' field 'tailscale_ip' differs: declared=100.79.58.118, observed=None",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "infra",
+      "field": "host",
+      "declared": "srv1",
+      "message": "Node 'infra' field 'host' differs: declared=srv1, observed=None",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "infra",
+      "field": "cpu",
+      "declared": 4,
+      "message": "Node 'infra' field 'cpu' differs: declared=4, observed=None",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "infra",
+      "field": "memory",
+      "declared": "4GiB",
+      "message": "Node 'infra' field 'memory' differs: declared=4GiB, observed=None",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "node",
+      "entity_id": "port:22",
+      "message": "Node 'port:22' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "node",
+      "entity_id": "port:27541",
+      "message": "Node 'port:27541' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "node",
+      "entity_id": "port:31605",
+      "message": "Node 'port:31605' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "node",
+      "entity_id": "port:4222",
+      "message": "Node 'port:4222' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "node",
+      "entity_id": "port:45481",
+      "message": "Node 'port:45481' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "node",
+      "entity_id": "port:5432",
+      "message": "Node 'port:5432' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "node",
+      "entity_id": "port:55441",
+      "message": "Node 'port:55441' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "node",
+      "entity_id": "port:8644",
+      "message": "Node 'port:8644' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "rapidwebs-org",
+      "message": "Node 'rapidwebs-org' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "rw-workstation-01",
+      "field": "provider",
+      "declared": "local",
+      "observed": "tailscale",
+      "message": "Node 'rw-workstation-01' field 'provider' differs: declared=local, observed=tailscale",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "srv1",
+      "field": "provider",
+      "declared": "hetzner",
+      "observed": "tailscale",
+      "message": "Node 'srv1' field 'provider' differs: declared=hetzner, observed=tailscale",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "srv1",
+      "field": "public_ip",
+      "declared": "89.167.54.98",
+      "message": "Node 'srv1' field 'public_ip' differs: declared=89.167.54.98, observed=None",
+      "ignored": false
+    },
+    {
+      "category": "mismatched",
+      "severity": "warning",
+      "entity_type": "node",
+      "entity_id": "srv1",
+      "field": "tailscale_ip",
+      "declared": "100.64.94.58",
+      "message": "Node 'srv1' field 'tailscale_ip' differs: declared=100.64.94.58, observed=None",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "service",
+      "entity_id": "agentgateway",
+      "message": "Service 'agentgateway' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "service",
+      "entity_id": "caddy",
+      "message": "Service 'caddy' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "service",
+      "entity_id": "dovecot",
+      "message": "Service 'dovecot' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "service",
+      "entity_id": "honcho-api",
+      "message": "Service 'honcho-api' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "service",
+      "entity_id": "knots-dns",
+      "message": "Service 'knots-dns' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "service",
+      "entity_id": "pgvector",
+      "message": "Service 'pgvector' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "service",
+      "entity_id": "portainer",
+      "message": "Service 'portainer' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "service",
+      "entity_id": "postfix",
+      "message": "Service 'postfix' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "service",
+      "entity_id": "rspamd",
+      "message": "Service 'rspamd' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "service",
+      "entity_id": "rw-inference-engine",
+      "message": "Service 'rw-inference-engine' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "service",
+      "entity_id": "seaweedfs",
+      "message": "Service 'seaweedfs' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "link",
+      "entity_id": "cloudflare-to-srv1",
+      "message": "Link 'cloudflare-to-srv1' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "link",
+      "entity_id": "dns-infra.rapidwebs.org",
+      "message": "Link 'dns-infra.rapidwebs.org' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "link",
+      "entity_id": "enterprise-to-dev",
+      "message": "Link 'enterprise-to-dev' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "link",
+      "entity_id": "infra-to-dev",
+      "message": "Link 'infra-to-dev' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "link",
+      "entity_id": "infra-to-enterprise",
+      "message": "Link 'infra-to-enterprise' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "link",
+      "entity_id": "port-22-unknown",
+      "message": "Link 'port-22-unknown' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "link",
+      "entity_id": "port-27541-unknown",
+      "message": "Link 'port-27541-unknown' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "link",
+      "entity_id": "port-31605-unknown",
+      "message": "Link 'port-31605-unknown' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "link",
+      "entity_id": "port-4222-unknown",
+      "message": "Link 'port-4222-unknown' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "link",
+      "entity_id": "port-45481-unknown",
+      "message": "Link 'port-45481-unknown' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "link",
+      "entity_id": "port-5432-unknown",
+      "message": "Link 'port-5432-unknown' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "link",
+      "entity_id": "port-55441-unknown",
+      "message": "Link 'port-55441-unknown' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "link",
+      "entity_id": "port-8644-unknown",
+      "message": "Link 'port-8644-unknown' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "link",
+      "entity_id": "srv1-to-dev",
+      "message": "Link 'srv1-to-dev' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "link",
+      "entity_id": "srv1-to-enterprise",
+      "message": "Link 'srv1-to-enterprise' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "link",
+      "entity_id": "srv1-to-infra",
+      "message": "Link 'srv1-to-infra' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "link",
+      "entity_id": "tailscale-rw-workstation-01-dev",
+      "message": "Link 'tailscale-rw-workstation-01-dev' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "link",
+      "entity_id": "tailscale-rw-workstation-01-enterprise",
+      "message": "Link 'tailscale-rw-workstation-01-enterprise' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "link",
+      "entity_id": "tailscale-rw-workstation-01-infra",
+      "message": "Link 'tailscale-rw-workstation-01-infra' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "extra",
+      "severity": "info",
+      "entity_type": "link",
+      "entity_id": "tailscale-rw-workstation-01-srv1",
+      "message": "Link 'tailscale-rw-workstation-01-srv1' is observed but not declared",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "link",
+      "entity_id": "workstation-to-dev",
+      "message": "Link 'workstation-to-dev' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "link",
+      "entity_id": "workstation-to-enterprise",
+      "message": "Link 'workstation-to-enterprise' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "link",
+      "entity_id": "workstation-to-infra",
+      "message": "Link 'workstation-to-infra' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "critical",
+      "entity_type": "link",
+      "entity_id": "workstation-to-srv1",
+      "message": "Link 'workstation-to-srv1' is declared but not observed",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "info",
+      "entity_type": "zone",
+      "entity_id": "edge",
+      "message": "Zone 'edge' is a design-time construct (not observable)",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "info",
+      "entity_type": "zone",
+      "entity_id": "infra",
+      "message": "Zone 'infra' is a design-time construct (not observable)",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "info",
+      "entity_type": "zone",
+      "entity_id": "enterprise",
+      "message": "Zone 'enterprise' is a design-time construct (not observable)",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "info",
+      "entity_type": "zone",
+      "entity_id": "dev",
+      "message": "Zone 'dev' is a design-time construct (not observable)",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "info",
+      "entity_type": "dependency",
+      "entity_id": "honcho-requires-pgvector",
+      "message": "Dependency 'honcho-requires-pgvector' is a logical construct (not observable)",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "info",
+      "entity_type": "dependency",
+      "entity_id": "honcho-requires-inference",
+      "message": "Dependency 'honcho-requires-inference' is a logical construct (not observable)",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "info",
+      "entity_type": "dependency",
+      "entity_id": "agentgateway-requires-honcho",
+      "message": "Dependency 'agentgateway-requires-honcho' is a logical construct (not observable)",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "info",
+      "entity_type": "dependency",
+      "entity_id": "caddy-requires-agentgateway",
+      "message": "Dependency 'caddy-requires-agentgateway' is a logical construct (not observable)",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "info",
+      "entity_type": "dependency",
+      "entity_id": "postfix-requires-dns",
+      "message": "Dependency 'postfix-requires-dns' is a logical construct (not observable)",
+      "ignored": false
+    },
+    {
+      "category": "missing",
+      "severity": "info",
+      "entity_type": "dependency",
+      "entity_id": "dovecot-requires-dns",
+      "message": "Dependency 'dovecot-requires-dns' is a logical construct (not observable)",
+      "ignored": false
+    }
+  ]
+}

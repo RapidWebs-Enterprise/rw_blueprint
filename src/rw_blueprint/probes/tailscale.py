@@ -1,12 +1,19 @@
-"""Tailscale probe - observes Tailscale mesh via ``tailscale status --json``."""
+"""Tailscale probe - observes Tailscale mesh via ``tailscale status --json``.
+
+Supports both local and remote (SSH) execution.
+"""
 
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime
 
 from rw_blueprint.live_state import LiveLink, LiveNode, LiveStateFragment
 from rw_blueprint.probes.base import Probe, ProbeResult
+from rw_blueprint.probes.ssh import run_local_cmd, run_remote_cmd
+
+_logger = logging.getLogger(__name__)
 
 
 class TailscaleProbe(Probe):
@@ -21,7 +28,17 @@ class TailscaleProbe(Probe):
         errors: list[str] = []
         fragment = LiveStateFragment()
 
-        exit_code, stdout, stderr = self._run_cmd(["tailscale", "status", "--json"])
+        # Try local first, then SSH
+        exit_code, stdout, stderr = run_local_cmd(["tailscale", "status", "--json"])
+
+        if exit_code != 0:
+            _logger.info("Local tailscale failed, trying SSH to %s", self.host_node)
+            exit_code, stdout, stderr = run_remote_cmd(
+                self.host_node,
+                ["tailscale", "status", "--json"],
+                timeout=self.timeout,
+            )
+
         if exit_code != 0:
             errors.append(f"tailscale status failed: {stderr}")
             return ProbeResult(
@@ -44,6 +61,7 @@ class TailscaleProbe(Probe):
 
         self_node = status.get("Self", {})
         self_name = self_node.get("HostName", self.host_node)
+        self_tailscale_ip = self_node.get("TailscaleIPs", [None])[0]
 
         # Add the self node
         fragment.nodes.append(
@@ -51,6 +69,7 @@ class TailscaleProbe(Probe):
                 id=self_name,
                 type="host",
                 provider="tailscale",
+                tailscale_ip=self_tailscale_ip,
                 state="running",
             )
         )
@@ -65,6 +84,7 @@ class TailscaleProbe(Probe):
                 continue
             peer_name = peer.get("HostName", "")
             online = peer.get("Online", False)
+            peer_tailscale_ip = peer.get("TailscaleIPs", [None])[0]
 
             if not online:
                 continue
@@ -75,6 +95,7 @@ class TailscaleProbe(Probe):
                     id=peer_name,
                     type="host",
                     provider="tailscale",
+                    tailscale_ip=peer_tailscale_ip,
                     state="running",
                 )
             )

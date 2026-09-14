@@ -1,12 +1,19 @@
-"""Port probe - observes listening ports via ss -tlnp."""
+"""Port probe - observes listening ports via ss -tlnp.
+
+Supports both local and remote (SSH) execution.
+"""
 
 from __future__ import annotations
 
+import logging
 import re
 from datetime import datetime
 
 from rw_blueprint.live_state import LiveLink, LiveNode, LiveStateFragment
 from rw_blueprint.probes.base import Probe, ProbeResult
+from rw_blueprint.probes.ssh import run_local_cmd, run_remote_cmd
+
+_logger = logging.getLogger(__name__)
 
 
 class PortProbe(Probe):
@@ -31,7 +38,17 @@ class PortProbe(Probe):
             )
         )
 
-        exit_code, stdout, stderr = self._run_cmd(["ss", "-tlnp"])
+        # Try local first, then SSH
+        exit_code, stdout, stderr = run_local_cmd(["ss", "-tlnp"])
+
+        if exit_code != 0:
+            _logger.info("Local ss failed, trying SSH to %s", self.host_node)
+            exit_code, stdout, stderr = run_remote_cmd(
+                self.host_node,
+                ["ss", "-tlnp"],
+                timeout=self.timeout,
+            )
+
         if exit_code != 0:
             errors.append(f"ss failed: {stderr}")
             return ProbeResult(
@@ -63,11 +80,11 @@ class PortProbe(Probe):
             else:
                 continue
 
-            # Extract process name from users=(("name",pid=123,fd=1))
+            # Extract process name from users=(\""name\"",pid=123,fd=1)
             proc_name = "unknown"
             if len(parts) >= 6:
                 process_info = " ".join(parts[5:])
-                match = re.search(r'users=\(\("\'([^"\']+)\',', process_info)
+                match = re.search(r'users=\(\("\'([^"\'"]+)\',', process_info)
                 if match:
                     proc_name = match.group(1)
 
