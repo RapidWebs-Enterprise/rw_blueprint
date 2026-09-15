@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from subprocess import CompletedProcess
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -14,21 +12,21 @@ from rw_blueprint.deployer.verify import HealthVerifier, HealthStatus
 class TestHealthVerifier:
     """Test HealthVerifier."""
 
-    @patch("rw_blueprint.deployer.targets.run")
-    def test_verify_service_running(self, mock_run):
+    def test_verify_service_running(self):
         """Test verifying a running service."""
         manager = MagicMock()
         manager.execute.return_value = MagicMock(
-            success=True, returncode=0, stdout="active", stderr=""
+            success=True, returncode=0, stdout="active\n", stderr=""
         )
 
         verifier = HealthVerifier(manager)
         result = verifier.verify("infra", "caddy")
 
         assert result.healthy is True
+        assert result.checks_passed == 1
+        assert result.checks_failed == 0
 
-    @patch("rw_blueprint.deployer.targets.run")
-    def test_verify_service_failed(self, mock_run):
+    def test_verify_service_failed(self):
         """Test verifying a failed service."""
         manager = MagicMock()
         manager.execute.return_value = MagicMock(
@@ -39,16 +37,16 @@ class TestHealthVerifier:
         result = verifier.verify("infra", "caddy")
 
         assert result.healthy is False
+        assert result.checks_failed == 1
 
-    @patch("rw_blueprint.deployer.targets.run")
-    def test_verify_with_http_check(self, mock_run):
+    def test_verify_with_http_check(self):
         """Test health check with HTTP endpoint."""
         manager = MagicMock()
-        # First call: systemctl is-active (returns "active")
-        # Second call: curl HTTP check (returns "200")
-        mock_run.side_effect = [
-            MagicMock(spec=CompletedProcess, returncode=0, stdout="active\n", stderr=""),
-            MagicMock(spec=CompletedProcess, returncode=0, stdout="200\n", stderr=""),
+        # First call: systemctl is-active -> active
+        # Second call: curl HTTP -> 200
+        manager.execute.side_effect = [
+            MagicMock(success=True, returncode=0, stdout="active\n", stderr=""),
+            MagicMock(success=True, returncode=0, stdout="200\n", stderr=""),
         ]
 
         verifier = HealthVerifier(manager)
@@ -60,19 +58,38 @@ class TestHealthVerifier:
 
         assert isinstance(result, HealthStatus)
         assert result.healthy is True
+        assert result.checks_passed == 2
+        assert result.checks_failed == 0
 
-    @patch("rw_blueprint.deployer.targets.run")
-    def test_verify_timeout(self, mock_run):
-        """Test health check timeout."""
+    def test_verify_http_failure(self):
+        """Test health check with failing HTTP endpoint."""
+        manager = MagicMock()
+        manager.execute.side_effect = [
+            MagicMock(success=True, returncode=0, stdout="active\n", stderr=""),
+            MagicMock(success=True, returncode=0, stdout="500\n", stderr=""),
+        ]
+
+        verifier = HealthVerifier(manager)
+        result = verifier.verify(
+            "infra",
+            "honcho-api",
+            health_check={"http": {"url": "http://localhost:8000/health", "expected_status": 200}},
+        )
+
+        assert result.healthy is False
+        assert result.checks_failed == 1
+
+    def test_verify_timeout(self):
+        """Test health check with timeout."""
         manager = MagicMock()
         manager.execute.return_value = MagicMock(
-            success=True, returncode=0, stdout="activating", stderr=""
+            success=True, returncode=0, stdout="activating\n", stderr=""
         )
 
         verifier = HealthVerifier(manager)
         result = verifier.verify("infra", "caddy", timeout=1)
 
-        # Should eventually report healthy or failed based on final status
+        # Should still return a valid status (just not healthy if still activating)
         assert isinstance(result, HealthStatus)
 
 
