@@ -54,7 +54,7 @@ class TestGeneratorDeployerIntegration:
         topology = Topology(
             metadata=Metadata(name="test", updated=date.today()),
             zones=[Zone(id="mesh", name="Mesh")],
-            nodes=[Node(id="infra", name="infra", zone="mesh", type="host", hostname="infra.example.com")],
+            nodes=[Node(id="infra", zone="mesh", type="host")],
             services=[
                 Service(
                     id="caddy",
@@ -91,8 +91,8 @@ class TestGeneratorDeployerIntegration:
             metadata=Metadata(name="test", updated=date.today()),
             zones=[Zone(id="mesh", name="Mesh")],
             nodes=[
-                Node(id="infra", name="infra", zone="mesh", type="host", hostname="infra.example.com"),
-                Node(id="srv1", name="srv1", zone="mesh", type="host", hostname="srv1.example.com"),
+                Node(id="infra", zone="mesh", type="host"),
+                Node(id="srv1", zone="mesh", type="host"),
             ],
             services=[
                 Service(
