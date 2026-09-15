@@ -59,7 +59,7 @@ class TestGeneratorDeployerIntegration:
                 Service(
                     id="caddy",
                     node="infra",
-                    kind="reverse_proxy",
+                    kind="proxy",
                     managed_by="quadlet",
                     image="localhost/caddy:latest",
                 )
@@ -98,14 +98,14 @@ class TestGeneratorDeployerIntegration:
                 Service(
                     id="caddy",
                     node="infra",
-                    kind="reverse_proxy",
+                    kind="proxy",
                     managed_by="quadlet",
                     image="localhost/caddy:latest",
                 ),
                 Service(
                     id="postfix",
                     node="srv1",
-                    kind="smtp",
+                    kind="messaging",
                     managed_by="quadlet",
                     image="localhost/postfix:latest",
                 ),
