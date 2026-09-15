@@ -1,7 +1,7 @@
 {
   "schema_version": "0.2",
   "metadata": {
-    "captured_at": "2026-09-14T20:06:13.478753",
+    "captured_at": "2026-09-14T20:04:02.332371",
     "captured_by": "rw_blueprint",
     "schema_version": "0.2"
   },
@@ -228,13 +228,6 @@
       "from_": "srv1",
       "to": "port:55441",
       "protocol": "tcp",
-      "observed": true
-    },
-    {
-      "id": "dns-rapidwebs.org",
-      "from_": "srv1",
-      "to": "dns:rapidwebs.org",
-      "protocol": "dns",
       "observed": true
     },
     {

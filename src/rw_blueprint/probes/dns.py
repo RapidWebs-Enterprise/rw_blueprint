@@ -60,6 +60,7 @@ class DnsProbe(Probe):
             )
 
             # Try kdig first, fall back to dig
+            success = False
             for cmd in [["kdig", "+short", domain], ["dig", "+short", domain]]:
                 exit_code, stdout, stderr = run_local_cmd(cmd)
 
@@ -72,8 +73,9 @@ class DnsProbe(Probe):
                         timeout=self.timeout,
                     )
 
-                if exit_code == 0 and stdout.strip():
-                    # Success - create a link showing DNS resolution works
+                if exit_code == 0:
+                    # Success - kdig/dig returned exit 0 (DNS query executed)
+                    # Empty stdout means no A record, but NS/SOA may exist
                     link = LiveLink(
                         id=f"dns-{domain}",
                         **{"from": self.host_node},
@@ -82,8 +84,10 @@ class DnsProbe(Probe):
                         observed=True,
                     )
                     fragment.links.append(link)
+                    success = True
                     break
-            else:
+
+            if not success:
                 errors.append(f"DNS resolution failed for {domain}")
 
         return ProbeResult(
