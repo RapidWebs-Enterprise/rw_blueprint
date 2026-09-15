@@ -44,11 +44,11 @@ class TestHealthVerifier:
     def test_verify_with_http_check(self, mock_run):
         """Test health check with HTTP endpoint."""
         manager = MagicMock()
-        # First call: systemctl is-active
-        # Second call: curl HTTP check
+        # First call: systemctl is-active (returns "active")
+        # Second call: curl HTTP check (returns "200")
         mock_run.side_effect = [
-            MagicMock(spec=CompletedProcess, returncode=0, stdout="active", stderr=""),
-            MagicMock(spec=CompletedProcess, returncode=0, stdout="200", stderr=""),
+            MagicMock(spec=CompletedProcess, returncode=0, stdout="active\n", stderr=""),
+            MagicMock(spec=CompletedProcess, returncode=0, stdout="200\n", stderr=""),
         ]
 
         verifier = HealthVerifier(manager)
