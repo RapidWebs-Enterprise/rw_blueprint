@@ -24,6 +24,15 @@ from rw_blueprint.reconciler import (
 )
 from rw_blueprint.remediation import generate_remediation
 from rw_blueprint.report import DriftReportModel
+from rw_blueprint.deployer import (
+    DeployExecutor,
+    DeploymentState,
+    HealthVerifier,
+    PlanGenerator,
+    RollbackExecutor,
+    TargetManager,
+)
+from pathlib import Path
 
 app = typer.Typer(
     name="rw-blueprint",
@@ -440,6 +449,153 @@ def mcp(
         err_console.print("[red]MCP support not installed.[/red] Install with: uv sync --group mcp")
         raise typer.Exit(code=2) from None
     run_mcp(transport)
+
+
+@app.command()
+def plan(
+    topology: str = typer.Argument(..., help="Path to topology YAML file"),
+    node: str = typer.Option(..., "--node", "-n", help="Target node to plan for"),
+    services: str | None = typer.Option(None, "--services", "-s", help="Comma-separated list of services to deploy"),
+    force: bool = typer.Option(False, "--force", help="Skip confirmation prompts"),
+) -> None:
+    """Generate a deployment plan for a node."""
+    # Load topology
+    try:
+        topo = load_topology(topology)
+    except FileNotFoundError:
+        err_console.print(f"[red]Error:[/red] topology file not found: {topology}")
+        raise typer.Exit(code=2) from None
+    except ValueError as exc:
+        err_console.print(f"[red]Topology validation failed:[/red] {exc}")
+        raise typer.Exit(code=2) from None
+
+    # Filter services if specified
+    target_services = None
+    if services:
+        target_services = [s.strip() for s in services.split(",") if s.strip()]
+
+    # Generate plan
+    generator = PlanGenerator()
+    plan = generator.generate(desired=topo, existing=None)
+
+    # Display plan
+    console.print(f"\n[bold]Deployment Plan for {node}[/bold]\n")
+    console.print(f"  Actions: {len(plan.actions)}")
+    console.print(f"  Blast Radius: [yellow]{plan.blast_radius.value}[/yellow]")
+    console.print(f"  Requires Approval: {'[red]Yes[/red]' if plan.requires_approval else 'No'}\n")
+
+    if plan.actions:
+        table = Table(title="Actions")
+        table.add_column("Service")
+        table.add_column("Action")
+        table.add_column("Node")
+        table.add_column("Dependencies")
+        for action in plan.actions:
+            deps = ", ".join(action.dependencies) if action.dependencies else "-"
+            table.add_row(action.service, action.action, action.node, deps)
+        console.print(table)
+    else:
+        console.print("[green]No actions required - state is already correct[/green]")
+
+    # Save plan to file if requested
+    if not force:
+        confirm = typer.confirm("\n[bold]Apply this plan?[/bold]")
+        if not confirm:
+            console.print("[yellow]Plan saved, not applied.[/yellow]")
+            raise typer.Exit(code=0)
+
+
+@app.command()
+def deploy(
+    topology: str = typer.Argument(..., help="Path to topology YAML file"),
+    node: str = typer.Option(..., "--node", "-n", help="Target node to deploy to"),
+    services: str | None = typer.Option(None, "--services", "-s", help="Comma-separated list of services to deploy"),
+    force: bool = typer.Option(False, "--force", help="Skip confirmation prompts"),
+) -> None:
+    """Deploy services to a node."""
+    # Load topology
+    try:
+        topo = load_topology(topology)
+    except FileNotFoundError:
+        err_console.print(f"[red]Error:[/red] topology file not found: {topology}")
+        raise typer.Exit(code=2) from None
+    except ValueError as exc:
+        err_console.print(f"[red]Topology validation failed:[/red] {exc}")
+        raise typer.Exit(code=2) from None
+
+    # Generate plan
+    generator = PlanGenerator()
+    plan = generator.generate(desired=topo, existing=None)
+
+    if not force and plan.requires_approval:
+        console.print(f"\n[bold]Blast radius: [yellow]{plan.blast_radius.value}[/yellow][/bold]")
+        confirm = typer.confirm("Apply this deployment?")
+        if not confirm:
+            console.print("[yellow]Deployment cancelled.[/yellow]")
+            raise typer.Exit(code=0)
+
+    # Execute deployment
+    target_manager = TargetManager()
+    executor = DeployExecutor(target_manager=target_manager)
+    state_tracker = DeploymentState(storage_dir=Path(".rw_blueprint/deployments"))
+
+    result = executor.execute(plan, node)
+
+    if result.success:
+        console.print(f"\n[green]✓ Deployment successful for {node}[/green]")
+        console.print(f"  Services: {', '.join(result.actions_completed)}")
+    else:
+        console.print(f"\n[red]✗ Deployment failed for {node}[/red]")
+        console.print(f"  Error: {result.error_message}")
+        raise typer.Exit(code=1)
+
+    # Verify health
+    verifier = HealthVerifier(target_manager=target_manager)
+    for service_id in result.actions_completed:
+        health = verifier.verify(node, service_id)
+        if health.healthy:
+            console.print(f"  [green]✓[/green] {service_id}: healthy")
+        else:
+            console.print(f"  [red]✗[/red] {service_id}: unhealthy")
+            for check, detail in health.details.items():
+                console.print(f"    - {check}: {detail}")
+
+    # Record deployment
+    from rw_blueprint.deployer.state import DeploymentRecord
+    from datetime import datetime
+    import hashlib
+
+    config_hash = hashlib.sha256(topology.encode()).hexdigest()[:16]
+    record = DeploymentRecord(
+        version="1.0.0",
+        deployed_at=datetime.now().isoformat(),
+        deployed_by="sysop",
+        status="healthy" if result.success else "failed",
+        image="local",
+        config_hash=config_hash,
+    )
+    for service_id in result.actions_completed:
+        state_tracker.record(node, service_id, record)
+
+
+@app.command()
+def rollback(
+    service: str = typer.Argument(..., help="Service to rollback"),
+    node: str = typer.Option(..., "--node", "-n", help="Target node"),
+) -> None:
+    """Rollback a service to its previous healthy state."""
+    target_manager = TargetManager()
+    state_tracker = DeploymentState(storage_dir=Path(".rw_blueprint/deployments"))
+    executor = RollbackExecutor(target_manager=target_manager, state_tracker=state_tracker)
+
+    result = executor.rollback(node, service)
+
+    if result.success:
+        console.print(f"[green]✓ Rolled back {service} on {node}[/green]")
+    else:
+        console.print(f"[red]✗ Rollback failed for {service} on {node}[/red]")
+        console.print(f"  Error: {result.error_message}")
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":
