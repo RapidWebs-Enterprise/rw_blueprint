@@ -32,6 +32,7 @@ SCHEMA_VERSION = "0.2"
 
 NodeType = Literal["host", "container", "external", "device"]
 ManagedBy = Literal["quadlet", "systemd", "host", "manual"]
+ServiceType = Literal["container", "systemd"]
 ServiceKind = Literal[
     "application",
     "database",
@@ -111,6 +112,10 @@ class Service(_StrictModel):
     image: str | None = None
     ports: list[Port] = Field(default_factory=list)
     managed_by: ManagedBy = "manual"
+    #: Service type: container (podman quadlet) or systemd (native unit).
+    service_type: ServiceType = "container"
+    #: Whether the service requires root privileges.
+    privileged: bool = False
 
 
 class Link(_StrictModel):
