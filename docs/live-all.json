@@ -1,8 +1,9 @@
 {
   "schema_version": "0.2",
   "metadata": {
-    "captured_at": "2026-09-14T18:54:00Z",
-    "captured_by": "rw_blueprint"
+    "captured_at": "2026-09-14T20:22:34.505212",
+    "captured_by": "rw_blueprint",
+    "schema_version": "0.2"
   },
   "nodes": [
     {
@@ -230,63 +231,70 @@
   "links": [
     {
       "id": "port-27541-unknown",
-      "from_": "srv1",
+      "from_": "enterprise",
       "to": "port:27541",
       "protocol": "tcp",
       "observed": true
     },
     {
       "id": "port-31605-unknown",
-      "from_": "srv1",
+      "from_": "enterprise",
       "to": "port:31605",
       "protocol": "tcp",
       "observed": true
     },
     {
       "id": "port-4222-unknown",
-      "from_": "srv1",
+      "from_": "enterprise",
       "to": "port:4222",
       "protocol": "tcp",
       "observed": true
     },
     {
       "id": "port-45481-unknown",
-      "from_": "srv1",
+      "from_": "enterprise",
       "to": "port:45481",
       "protocol": "tcp",
       "observed": true
     },
     {
       "id": "port-22-unknown",
-      "from_": "srv1",
+      "from_": "enterprise",
       "to": "port:22",
       "protocol": "tcp",
       "observed": true
     },
     {
       "id": "port-8644-unknown",
-      "from_": "srv1",
+      "from_": "enterprise",
       "to": "port:8644",
       "protocol": "tcp",
       "observed": true
     },
     {
       "id": "port-5432-unknown",
-      "from_": "srv1",
+      "from_": "enterprise",
       "to": "port:5432",
       "protocol": "tcp",
       "observed": true
     },
     {
       "id": "port-55441-unknown",
-      "from_": "srv1",
+      "from_": "enterprise",
       "to": "port:55441",
       "protocol": "tcp",
       "observed": true
     },
     {
+      "id": "dns-rapidwebs.org",
+      "from_": "enterprise",
+      "to": "dns:rapidwebs.org",
+      "protocol": "dns",
+      "observed": true
+    },
+    {
       "id": "dns-infra.rapidwebs.org",
-      "from_": "srv1",
+      "from_": "enterprise",
       "to": "dns:infra.rapidwebs.org",
       "protocol": "dns",
       "observed": true
