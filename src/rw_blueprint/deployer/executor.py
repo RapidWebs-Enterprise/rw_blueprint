@@ -36,12 +36,13 @@ class DeployExecutor:
     def __init__(self, target_manager: TargetManager):
         self.target = target_manager
 
-    def execute(self, plan: DeploymentPlan, node: str) -> DeploymentResult:
+    def execute(self, plan: DeploymentPlan, node: str, output_dir: Path | None = None) -> DeploymentResult:
         """Execute deployment plan on target node.
 
         Args:
             plan: Deployment plan to execute.
             node: Target node identifier.
+            output_dir: Directory containing generated quadlet artifacts.
 
         Returns:
             DeploymentResult with execution details.
@@ -55,7 +56,7 @@ class DeployExecutor:
 
             try:
                 if action.action == "create" or action.action == "update":
-                    self._deploy_service(node, action)
+                    self._deploy_service(node, action, output_dir=output_dir)
                     actions_completed.append(action.service)
                 elif action.action == "delete":
                     self._undeploy_service(node, action)
@@ -73,22 +74,37 @@ class DeployExecutor:
             error_message=error_message,
         )
 
-    def _deploy_service(self, node: str, action: "DeploymentAction") -> None:
+    def _deploy_service(self, node: str, action: "DeploymentAction", output_dir: Path | None = None) -> None:
         """Deploy a single service."""
-        # Transfer quadlet file
-        if action.config_path:
-            result = self.target.transfer_file(node, action.config_path, action.config_path)
+        # Check if service is already active
+        check_result = self.target.execute(node, ["systemctl", "is-active", action.service])
+        service_active = check_result.success and check_result.stdout.strip() == "active"
+
+        # Also check if any container already using this port exists
+        port_check = self.target.execute(node, ["podman", "ps", "-a", "--format", "{{.Ports}}"])
+        port_exists = check_result.success and bool(port_check.stdout.strip())
+
+        # Transfer quadlet file if provided
+        if action.config_path and output_dir:
+            local_path = output_dir / "quadlet" / f"{action.service}.container"
+            if not local_path.exists():
+                raise RuntimeError(f"Quadlet file not found: {local_path}")
+            result = self.target.transfer_file(node, local_path, action.config_path, sudo=True)
             if not result.success:
                 raise RuntimeError(f"Failed to transfer file: {result.stderr}")
 
-        # Reload systemd and start service
-        result = self.target.execute(node, ["systemctl", "daemon-reload"], sudo=True)
-        if not result.success:
-            raise RuntimeError(f"Failed to reload systemd: {result.stderr}")
+            # Reload systemd if file was transferred
+            result = self.target.execute(node, ["systemctl", "daemon-reload"], sudo=True)
+            if not result.success:
+                raise RuntimeError(f"Failed to reload systemd: {result.stderr}")
+
+        # Only start if not already active and no port conflict
+        if service_active or port_exists:
+            return  # Already running
 
         result = self.target.execute(
             node,
-            ["systemctl", "enable", "--now", f"{action.service}.container"],
+            ["systemctl", "start", action.service],
             sudo=True,
         )
         if not result.success:

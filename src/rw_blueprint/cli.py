@@ -474,9 +474,14 @@ def plan(
     if services:
         target_services = [s.strip() for s in services.split(",") if s.strip()]
 
+    # Extract services for this node
+    node_services = [s for s in topo.services if s.node == node]
+    if target_services:
+        node_services = [s for s in node_services if s.id in target_services]
+
     # Generate plan
     generator = PlanGenerator()
-    plan = generator.generate(desired=topo, existing=None)
+    plan = generator.generate(desired=node_services, existing={})
 
     # Display plan
     console.print(f"\n[bold]Deployment Plan for {node}[/bold]\n")
@@ -523,9 +528,15 @@ def deploy(
         err_console.print(f"[red]Topology validation failed:[/red] {exc}")
         raise typer.Exit(code=2) from None
 
+    # Filter services for this node
+    node_services = [s for s in topo.services if s.node == node]
+    if services:
+        target_services = [s.strip() for s in services.split(",") if s.strip()]
+        node_services = [s for s in node_services if s.id in target_services]
+
     # Generate plan
     generator = PlanGenerator()
-    plan = generator.generate(desired=topo, existing=None)
+    plan = generator.generate(desired=node_services, existing={})
 
     if not force and plan.requires_approval:
         console.print(f"\n[bold]Blast radius: [yellow]{plan.blast_radius.value}[/yellow][/bold]")
@@ -535,11 +546,16 @@ def deploy(
             raise typer.Exit(code=0)
 
     # Execute deployment
-    target_manager = TargetManager()
+    nodes_config = {node: {"host": node, "user": "sysop"}}
+    target_manager = TargetManager(nodes=nodes_config)
     executor = DeployExecutor(target_manager=target_manager)
     state_tracker = DeploymentState(storage_dir=Path(".rw_blueprint/deployments"))
 
-    result = executor.execute(plan, node)
+    # Generate artifacts first
+    output_dir = Path("docs/generated")
+    generate_artifacts(topo, output_dir)
+
+    result = executor.execute(plan, node, output_dir=output_dir)
 
     if result.success:
         console.print(f"\n[green]✓ Deployment successful for {node}[/green]")
