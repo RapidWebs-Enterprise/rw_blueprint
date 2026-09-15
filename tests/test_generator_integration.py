@@ -9,6 +9,7 @@ import pytest
 
 from rw_blueprint.deployer.integration import DeployableArtifact, GeneratorDeployerIntegration
 from rw_blueprint.schema import Topology, Node, Service, Zone, Metadata
+from datetime import date
 
 
 class TestDeployableArtifact:
@@ -51,7 +52,7 @@ class TestGeneratorDeployerIntegration:
         ]
 
         topology = Topology(
-            metadata=Metadata(name="test", version="1.0.0"),
+            metadata=Metadata(name="test", updated=date.today()),
             zones=[Zone(id="mesh", name="Mesh")],
             nodes=[Node(id="infra", name="infra", zone="mesh", type="host", hostname="infra.example.com")],
             services=[
@@ -87,7 +88,7 @@ class TestGeneratorDeployerIntegration:
         mock_generate.return_value = []
 
         topology = Topology(
-            metadata=Metadata(name="test", version="1.0.0"),
+            metadata=Metadata(name="test", updated=date.today()),
             zones=[Zone(id="mesh", name="Mesh")],
             nodes=[
                 Node(id="infra", name="infra", zone="mesh", type="host", hostname="infra.example.com"),
@@ -134,7 +135,7 @@ class TestGeneratorDeployerIntegration:
     def test_from_file(self, mock_load):
         """Test loading from a topology file."""
         topology = Topology(
-            metadata=Metadata(name="test", version="1.0.0"),
+            metadata=Metadata(name="test", updated=date.today()),
             zones=[],
             nodes=[],
             services=[],
