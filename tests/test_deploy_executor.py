@@ -57,10 +57,15 @@ class TestDeployExecutor:
     def test_execute_partial_failure_continues(self, mock_run):
         """Test partial failure with continue_on_failure=True continues."""
         manager = MagicMock()
-        # First call fails, second succeeds
+        # First call (is-active) succeeds, second (start) fails for caddy
+        # Third call (is-active) succeeds, fourth (start) succeeds for honcho-api
         manager.execute.side_effect = [
-            RunResult(success=False, returncode=1, stdout="", stderr="Failed to start"),
-            RunResult(success=True, returncode=0, stdout="active", stderr=""),
+            RunResult(success=True, returncode=0, stdout="inactive", stderr=""),  # is-active caddy
+            RunResult(success=True, returncode=0, stdout="", stderr=""),  # daemon-reload
+            RunResult(success=False, returncode=1, stdout="", stderr="Failed to start"),  # start caddy
+            RunResult(success=True, returncode=0, stdout="inactive", stderr=""),  # is-active honcho-api
+            RunResult(success=True, returncode=0, stdout="", stderr=""),  # daemon-reload
+            RunResult(success=True, returncode=0, stdout="active", stderr=""),  # start honcho-api
         ]
         manager.transfer_file.return_value = RunResult(success=True, returncode=0, stdout="", stderr="")
 
