@@ -1,0 +1,307 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "rw_blueprint MCP Server API",
+    "version": "0.2.0",
+    "description": "Model Context Protocol server for declarative infrastructure management",
+    "contact": {
+      "name": "RapidWebs Enterprise",
+      "url": "https://github.com/RapidWebs-Enterprise/rw_blueprint"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8765",
+      "description": "Local MCP server"
+    }
+  ],
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Topology": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "example": "0.2"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/Metadata"
+          },
+          "zones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Zone"
+            }
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Node"
+            }
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Service"
+            }
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            }
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Dependency"
+            }
+          }
+        }
+      },
+      "Metadata": {
+        "type": "object",
+        "required": ["name", "updated"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "rapidwebs-rwdn"
+          },
+          "description": {
+            "type": "string",
+            "example": "RapidWebs Distributed Network"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-09-19"
+          }
+        }
+      },
+      "Zone": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "infra"
+          },
+          "name": {
+            "type": "string",
+            "example": "Infrastructure"
+          }
+        }
+      },
+      "Node": {
+        "type": "object",
+        "required": ["id", "zone", "type"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "infra"
+          },
+          "zone": {
+            "type": "string",
+            "example": "infra"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["host", "container", "external"],
+            "example": "container"
+          },
+          "host": {
+            "type": "string",
+            "example": "srv1"
+          },
+          "tailscale_ip": {
+            "type": "string",
+            "example": "100.79.58.118"
+          }
+        }
+      },
+      "Service": {
+        "type": "object",
+        "required": ["id", "node", "kind"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "honcho-api"
+          },
+          "node": {
+            "type": "string",
+            "example": "infra"
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["application", "database", "proxy", "cache", "queue", "storage", "observability", "messaging", "dns", "web"],
+            "example": "application"
+          },
+          "service_type": {
+            "type": "string",
+            "enum": ["container", "systemd"],
+            "example": "container"
+          },
+          "image": {
+            "type": "string",
+            "example": "localhost/honcho:latest"
+          },
+          "ports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Port"
+            }
+          }
+        }
+      },
+      "Port": {
+        "type": "object",
+        "properties": {
+          "port": {
+            "type": "integer",
+            "example": 8000
+          },
+          "public": {
+            "type": "integer",
+            "example": 8000
+          },
+          "protocol": {
+            "type": "string",
+            "enum": ["tcp", "udp"],
+            "example": "tcp"
+          }
+        }
+      },
+      "Link": {
+        "type": "object",
+        "required": ["id", "from", "to"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "srv1-to-infra"
+          },
+          "from": {
+            "type": "string",
+            "example": "srv1"
+          },
+          "to": {
+            "type": "string",
+            "example": "infra"
+          },
+          "protocol": {
+            "type": "string",
+            "example": "wireguard"
+          }
+        }
+      },
+      "Dependency": {
+        "type": "object",
+        "required": ["id", "from", "to"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "honcho-requires-pgvector"
+          },
+          "from": {
+            "type": "string",
+            "example": "honcho-api"
+          },
+          "to": {
+            "type": "string",
+            "example": "pgvector"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["requires", "observes", "provides"],
+            "example": "requires"
+          }
+        }
+      }
+    }
+  },
+  "x-mcp-tools": [
+    {
+      "name": "validate_topology",
+      "description": "Validate a topology YAML file against the schema",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path to topology YAML file"
+          }
+        },
+        "required": ["path"]
+      }
+    },
+    {
+      "name": "generate_artifacts",
+      "description": "Generate diagrams, docs, and IaC from topology",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path to topology YAML file"
+          },
+          "output": {
+            "type": "string",
+            "description": "Output directory"
+          }
+        },
+        "required": ["path"]
+      }
+    },
+    {
+      "name": "run_probes",
+      "description": "Run infrastructure probes and collect live state",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nodes": {
+            "type": "string",
+            "description": "Comma-separated list of nodes"
+          },
+          "output": {
+            "type": "string",
+            "description": "Output JSON file path"
+          }
+        }
+      }
+    },
+    {
+      "name": "detect_drift",
+      "description": "Compare topology against live state",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "topology": {
+            "type": "string",
+            "description": "Path to topology YAML"
+          },
+          "live_state": {
+            "type": "string",
+            "description": "Path to live state JSON"
+          }
+        },
+        "required": ["topology", "live_state"]
+      }
+    }
+  ],
+  "x-mcp-resources": [
+    {
+      "uri": "schema://topology",
+      "name": "Topology Schema",
+      "description": "JSON Schema for topology.yaml validation"
+    },
+    {
+      "uri": "report://drift",
+      "name": "Latest Drift Report",
+      "description": "Most recent drift detection report"
+    }
+  ]
+}
