@@ -12,6 +12,7 @@ from typing import Protocol
 
 from rw_blueprint.deployer.lifecycle import ImageLifecycle
 from rw_blueprint.deployer.plan import DeploymentAction, DeploymentPlan
+from rw_blueprint.deployer.state import DeploymentState
 from rw_blueprint.deployer.targets import RunResult, TargetManager
 from rw_blueprint.schema import ImageRef
 
@@ -46,13 +47,22 @@ class DeployExecutor:
         """Inject ImageLifecycle for image-aware deployments."""
         self.lifecycle = lifecycle
 
-    def execute(self, plan: DeploymentPlan, node: str, output_dir: Path | None = None) -> DeploymentResult:
+    def execute(
+        self,
+        plan: DeploymentPlan,
+        node: str,
+        output_dir: Path | None = None,
+        state_tracker: DeploymentState | None = None,
+        continue_on_failure: bool = False,
+    ) -> DeploymentResult:
         """Execute deployment plan on target node.
 
         Args:
             plan: Deployment plan to execute.
             node: Target node identifier.
             output_dir: Directory containing generated quadlet artifacts.
+            state_tracker: Optional deployment state tracker for history/artifacts.
+            continue_on_failure: If True, continue deploying other services after failure.
 
         Returns:
             DeploymentResult with execution details.
@@ -66,13 +76,22 @@ class DeployExecutor:
 
             try:
                 if action.action == "create" or action.action == "update":
-                    self._deploy_service(node, action, output_dir=output_dir)
+                    self._deploy_service(
+                        node,
+                        action,
+                        output_dir=output_dir,
+                        state_tracker=state_tracker,
+                    )
                     actions_completed.append(action.service)
                 elif action.action == "delete":
                     self._undeploy_service(node, action)
                     actions_completed.append(action.service)
             except Exception as e:
-                errors.append(f"{action.service}: {e}")
+                error_msg = f"{action.service}: {e}"
+                if continue_on_failure:
+                    errors.append(error_msg)
+                    continue
+                raise RuntimeError(error_msg)
 
         success = len(errors) == 0
         error_message = "; ".join(errors) if errors else None
@@ -103,7 +122,13 @@ class DeployExecutor:
             self._image_cache[cache_key] = image_ref
         return image_ref
 
-    def _deploy_service(self, node: str, action: "DeploymentAction", output_dir: Path | None = None) -> None:
+    def _deploy_service(
+        self,
+        node: str,
+        action: "DeploymentAction",
+        output_dir: Path | None = None,
+        state_tracker: DeploymentState | None = None,
+    ) -> None:
         """Deploy a single service."""
         # Check if service is already active
         check_result = self.target.execute(node, ["systemctl", "is-active", action.service])
@@ -118,6 +143,16 @@ class DeployExecutor:
             local_path = output_dir / "quadlet" / f"{action.service}.container"
             if not local_path.exists():
                 raise RuntimeError(f"Quadlet file not found: {local_path}")
+
+            # Store artifact for rollback if tracker provided
+            if state_tracker and action.config_path:
+                state_tracker.store_artifact(
+                    node,
+                    action.service,
+                    "current",
+                    local_path,
+                )
+
             result = self.target.transfer_file(node, local_path, action.config_path, sudo=True)
             if not result.success:
                 raise RuntimeError(f"Failed to transfer file: {result.stderr}")

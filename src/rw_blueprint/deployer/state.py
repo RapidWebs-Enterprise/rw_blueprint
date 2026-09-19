@@ -94,3 +94,46 @@ class DeploymentState:
             if record.status == "healthy":
                 return record
         return None
+
+    def store_artifact(
+        self,
+        node: str,
+        service: str,
+        version: str,
+        artifact_path: Path,
+    ) -> Path:
+        """Store a deployment artifact (quadlet file) for rollback.
+
+        Args:
+            node: Target node identifier.
+            service: Service name.
+            version: Version string (e.g., git SHA or semver).
+            artifact_path: Path to the artifact file to store.
+
+        Returns:
+            Path where artifact was stored.
+        """
+        artifact_dir = self.storage_dir / node / "artifacts" / service / version
+        artifact_dir.mkdir(parents=True, exist_ok=True)
+        stored_path = artifact_dir / artifact_path.name
+        stored_path.write_bytes(artifact_path.read_bytes())
+        return stored_path
+
+    def get_artifact(self, node: str, service: str, version: str) -> Path | None:
+        """Get stored artifact for rollback.
+
+        Args:
+            node: Target node identifier.
+            service: Service name.
+            version: Version to retrieve.
+
+        Returns:
+            Path to artifact, or None if not found.
+        """
+        artifact_path = self.storage_dir / node / "artifacts" / service / version
+        if artifact_path.exists():
+            # Return the first .container file found
+            containers = list(artifact_path.glob("*.container"))
+            if containers:
+                return containers[0]
+        return None

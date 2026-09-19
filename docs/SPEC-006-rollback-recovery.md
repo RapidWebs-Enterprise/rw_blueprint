@@ -13,7 +13,7 @@ Deployments fail. Services crash. We need to be able to revert to a known good s
 - [x] Track deployment history per service per node
 - [x] Support manual rollback to previous version
 - [x] Support automatic rollback on health check failure
-- [ ] Preserve deployment artifacts for rollback
+- [x] Preserve deployment artifacts for rollback
 - [x] Log all rollback actions
 
 ## 3. Design

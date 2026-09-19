@@ -37,7 +37,7 @@ class TestDeployExecutor:
 
     @patch("rw_blueprint.deployer.targets.run")
     def test_execute_service_failure(self, mock_run):
-        """Test deployment failure."""
+        """Test deployment failure with continue_on_failure=False raises."""
         manager = MagicMock()
         manager.execute.return_value = RunResult(
             success=False, returncode=1, stdout="", stderr="Failed to start"
@@ -50,9 +50,36 @@ class TestDeployExecutor:
             blast_radius=BlastRadius.SERVICE,
         )
 
-        result = executor.execute(plan, "infra")
-        assert result.success is False
-        assert "Failed to start" in result.error_message
+        with pytest.raises(RuntimeError, match="caddy"):
+            executor.execute(plan, "infra", continue_on_failure=False)
+
+    @patch("rw_blueprint.deployer.targets.run")
+    def test_execute_partial_failure_continues(self, mock_run):
+        """Test partial failure with continue_on_failure=True continues."""
+        manager = MagicMock()
+        # First call fails, second succeeds
+        manager.execute.side_effect = [
+            RunResult(success=False, returncode=1, stdout="", stderr="Failed to start"),
+            RunResult(success=True, returncode=0, stdout="active", stderr=""),
+        ]
+        manager.transfer_file.return_value = RunResult(success=True, returncode=0, stdout="", stderr="")
+
+        executor = DeployExecutor(manager)
+        plan = DeploymentPlan(
+            actions=[
+                DeploymentAction(node="infra", service="caddy", action="create"),
+                DeploymentAction(node="infra", service="honcho-api", action="create"),
+            ],
+            estimated_duration=MagicMock(),
+            blast_radius=BlastRadius.NODE,
+        )
+
+        result = executor.execute(plan, "infra", continue_on_failure=True)
+
+        # Should have partial success
+        assert not result.success
+        assert "caddy" in result.error_message
+        assert "honcho-api" in result.actions_completed
 
     @patch("rw_blueprint.deployer.targets.run")
     def test_execute_multiple_actions(self, mock_run):

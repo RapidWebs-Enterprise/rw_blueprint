@@ -15,7 +15,12 @@ Services have dependencies. Starting Caddy before Honcho will fail. Starting Hon
 - [x] Perform topological sort for startup order
 - [x] Detect and reject circular dependencies
 - [x] Wait for dependencies to be healthy before starting dependents
-- [ ] Handle partial failures gracefully
+- [x] Handle partial failures gracefully
+
+## 3. Design
+
+### 3.1 Dependency Graph
+(unchanged)
 
 ## 3. Design
 

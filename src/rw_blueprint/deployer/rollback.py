@@ -6,6 +6,7 @@ Handles rolling back failed deployments to the previous healthy state.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from rw_blueprint.deployer.state import DeploymentRecord, DeploymentState
@@ -68,9 +69,33 @@ class RollbackExecutor:
                     error_message=f"Failed to stop service: {result.stderr}",
                 )
 
-            # Restore previous quadlet file (if stored)
-            # Note: In production, this would restore from artifact storage
+            # Restore previous quadlet file from artifact storage
             config_path = f"/etc/containers/systemd/{service}.container"
+
+            # Try to restore from stored artifact
+            if previous and previous.image:
+                artifact = self.state.get_artifact(node, service, previous.image)
+                if artifact and artifact.exists():
+                    # Transfer artifact back to node
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(mode='wb', delete=False) as tmp:
+                        tmp.write(artifact.read_bytes())
+                        tmp_path = tmp.name
+                    try:
+                        result = self.target.transfer_file(
+                            node,
+                            Path(tmp_path),
+                            config_path,
+                            sudo=True,
+                        )
+                        if result.success:
+                            result = self.target.execute(
+                                node,
+                                ["systemctl", "daemon-reload"],
+                                sudo=True,
+                            )
+                    finally:
+                        Path(tmp_path).unlink(missing_ok=True)
 
             # Start previous service
             result = self.target.execute(
