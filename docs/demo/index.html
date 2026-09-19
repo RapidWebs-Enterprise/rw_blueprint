@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rw_blueprint — Declarative Infrastructure Engine</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Mermaid -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <style>
+        :root {
+            /* Enterprise Blue Palette */
+            --color-bg: #0a0f1a;
+            --color-surface: #111827;
+            --color-surface-elevated: #1a2235;
+            --color-border: rgba(59, 130, 246, 0.15);
+            --color-border-hover: rgba(59, 130, 246, 0.4);
+            
+            /* Primary Blues */
+            --color-primary: #3b82f6;
+            --color-primary-light: #60a5fa;
+            --color-primary-dark: #1d4ed8;
+            --color-primary-glow: rgba(59, 130, 246, 0.3);
+            
+            /* Accent Colors */
+            --color-accent-cyan: #06b6d4;
+            --color-accent-emerald: #10b981;
+            --color-accent-violet: #8b5cf6;
+            --color-accent-amber: #f59e0b;
+            
+            /* Text Colors */
+            --color-text-primary: #f1f5f9;
+            --color-text-secondary: #94a3b8;
+            --color-text-muted: #64748b;
+            --color-text-inverse: #0f172a;
+            
+            /* Success/Warning/Error */
+            --color-success: #10b981;
+            --color-warning: #f59e0b;
+            --color-error: #ef4444;
+            
+            /* Spacing */
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-2xl: 3rem;
+            --space-3xl: 4rem;
+            
+            /* Typography */
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+            
+            /* Borders */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px var(--color-primary-glow);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--color-bg);
+            color: var(--color-text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 15, 26, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .header-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: var(--space-md) var(--space-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-weight: 600;
+            font-size: 1.125rem;
+            color: var(--color-text-primary);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent-cyan));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: var(--space-xl);
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--color-primary-light);
+        }
+
+        .nav-cta {
+            background: var(--color-primary);
+            color: white !important;
+            padding: var(--space-sm) var(--space-lg);
+            border-radius: var(--radius-md);
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .nav-cta:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-1px);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: calc(80px + var(--space-3xl)) var(--space-xl) var(--space-3xl);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 400px;
+            background: radial-gradient(ellipse, var(--color-primary-glow) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            background: var(--color-surface-elevated);
+            border: 1px solid var(--color-border);
+            padding: var(--space-sm) var(--space-lg);
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-xl);
+        }
+
+        .hero-badge-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--color-accent-emerald);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: var(--space-lg);
+            background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-primary-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--color-text-secondary);
+            max-width: 640px;
+            margin: 0 auto var(--space-2xl);
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: var(--space-md);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-md) var(--space-xl);
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px var(--color-primary-glow);
+        }
+
+        .btn-secondary {
+            background: var(--color-surface);
+            color: var(--color-text-primary);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--color-border-hover);
+            background: var(--color-surface-elevated);
+        }
+
+        /* Stats Section */
+        .stats {
+            padding: var(--space-3xl) var(--space-xl);
+            border-top: 1px solid var(--color-border);
+            border-bottom: 1px solid var(--color-border);
+            background: var(--color-surface);
+        }
+
+        .stats-grid {
+            max-width: 1024px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-2xl);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-primary-light);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+            margin-top: var(--space-sm);
+        }
+
+        /* Sections */
+        .section {
+            padding: var(--space-3xl) var(--space-xl);
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: var(--space-3xl);
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: var(--space-md);
+        }
+
+        .section-header p {
+            color: var(--color-text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-xl);
+        }
+
+        .feature-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--color-border-hover);
+            transform: translateY(-4px);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent-cyan));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: var(--space-lg);
+        }
+
+        .feature-card h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+        }
+
+        .feature-card p {
+            color: var(--color-text-secondary);
+            font-size: 0.9375rem;
+        }
+
+        /* Architecture Diagram */
+        .diagram-container {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            overflow-x: auto;
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Code Examples */
+        .code-tabs {
+            display: flex;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: var(--space-md);
+        }
+
+        .code-tab {
+            padding: var(--space-sm) var(--space-lg);
+            background: transparent;
+            border: none;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s;
+        }
+
+        .code-tab.active {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .code-tab:hover:not(.active) {
+            background: var(--color-surface-elevated);
+            color: var(--color-text-primary);
+        }
+
+        .code-block {
+            background: var(--color-surface-elevated);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            line-height: 1.7;
+            color: var(--color-text-secondary);
+        }
+
+        .code-block .comment {
+            color: var(--color-text-muted);
+        }
+
+        .code-block .keyword {
+            color: var(--color-accent-violet);
+        }
+
+        .code-block .string {
+            color: var(--color-accent-emerald);
+        }
+
+        .code-block .function {
+            color: var(--color-primary-light);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .tab {
+            padding: var(--space-md) var(--space-lg);
+            background: transparent;
+            border: none;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: var(--color-primary-light);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Charts */
+        .chart-container {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* CTA Section */
+        .cta {
+            text-align: center;
+            padding: var(--space-3xl) var(--space-xl);
+            background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-bg) 100%);
+            border-top: 1px solid var(--color-border);
+        }
+
+        .cta h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: var(--space-lg);
+        }
+
+        .cta p {
+            color: var(--color-text-secondary);
+            max-width: 600px;
+            margin: 0 auto var(--space-2xl);
+        }
+
+        /* Footer */
+        .footer {
+            padding: var(--space-2xl) var(--space-xl);
+            border-top: 1px solid var(--color-border);
+            text-align: center;
+            color: var(--color-text-muted);
+            font-size: 0.875rem;
+        }
+
+        .footer a {
+            color: var(--color-primary-light);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <a href="#" class="logo">
+                <div class="logo-icon">rb</div>
+                rw_blueprint
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#architecture">Architecture</a></li>
+                    <li><a href="#cli">CLI Reference</a></li>
+                    <li><a href="#metrics">Metrics</a></li>
+                    <li><a href="https://github.com/RapidWebs-Enterprise/rw_blueprint" class="nav-cta">GitHub</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            v0.2.0 — Production Ready
+        </div>
+        <h1>Declarative Infrastructure<br>Source of Truth</h1>
+        <p>Validate, generate, probe, and reconcile your infrastructure topology with a single YAML file. Drift detection with human-in-the-loop approval.</p>
+        <div class="hero-actions">
+            <a href="#cli" class="btn btn-primary">Get Started</a>
+            <a href="https://github.com/RapidWebs-Enterprise/rw_blueprint" class="btn btn-secondary">View on GitHub</a>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value">194</div>
+                <div class="stat-label">Tests Passing</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">104+</div>
+                <div class="stat-label">Documentation Files</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">20</div>
+                <div class="stat-label">Architecture Decisions</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">6</div>
+                <div class="stat-label">Core CLI Commands</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="section">
+        <div class="section-header">
+            <h2>Core Capabilities</h2>
+            <p>Everything you need to manage infrastructure as code with confidence.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📋</div>
+                <h3>Validate</h3>
+                <p>Check topology YAML against a strict Pydantic schema with comprehensive error reporting.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Generate</h3>
+                <p>Produce quadlet containers, Incus profiles, Mermaid diagrams, and documentation from topology.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Probe</h3>
+                <p>Run read-only infrastructure probes (ports, Incus, podman, DNS, Tailscale) across multiple nodes.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Reconcile</h3>
+                <p>Three-way drift classification: missing, extra, and mismatched entities with severity levels.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>Deploy</h3>
+                <p>Execute deployment plans with dependency ordering, health checks, and automatic rollback.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🖼️</div>
+                <h3>Image Lifecycle</h3>
+                <p>Build, pull, push, inspect, and prune container images with security validation.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture -->
+    <section id="architecture" class="section">
+        <div class="section-header">
+            <h2>System Architecture</h2>
+            <p>Modular design with clear separation of concerns.</p>
+        </div>
+        <div class="diagram-container">
+            <div class="mermaid">
+graph TB
+    subgraph "Input"
+        YAML[topology.yaml<br/>Canonical Source]
+    end
+    
+    subgraph "Core Engine"
+        SCHEMA[Schema Layer<br/>Pydantic v2]
+        PROBE[Probe Registry<br/>Read-Only Collectors]
+        RECONCILE[Reconciler<br/>Drift Detection]
+        DEPLOY[Deployer Engine<br/>Execution]
+    end
+    
+    subgraph "Output"
+        DIAGRAMS[Diagrams & Docs]
+        DRIFT[Drift Report<br/>JSON/Markdown]
+        ARTIFACTS[Quadlet Units<br/>Incus Profiles]
+    end
+    
+    subgraph "External"
+        NODES[Target Nodes<br/>via SSH]
+        REGISTRY[Container Registry]
+    end
+    
+    YAML --> SCHEMA
+    SCHEMA --> PROBE
+    SCHEMA --> RECONCILE
+    SCHEMA --> DEPLOY
+    PROBE -->|Live State| RECONCILE
+    RECONCILE --> DRIFT
+    DEPLOY -->|Deploy| NODES
+    DEPLOY -->|Images| REGISTRY
+    DEPLOY --> ARTIFACTS
+    SCHEMA --> DIAGRAMS
+            </div>
+        </div>
+    </section>
+
+    <!-- CLI Reference -->
+    <section id="cli" class="section">
+        <div class="section-header">
+            <h2>CLI Reference</h2>
+            <p>Powerful commands for infrastructure management.</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('validate')">Validate</button>
+            <button class="tab" onclick="showTab('generate')">Generate</button>
+            <button class="tab" onclick="showTab('probe')">Probe</button>
+            <button class="tab" onclick="showTab('deploy')">Deploy</button>
+            <button class="tab" onclick="showTab('image')">Image</button>
+        </div>
+
+        <div id="tab-validate" class="tab-content active">
+            <div class="code-block">
+<span class="comment"># Validate a topology file</span>
+rw-blueprint validate topology.yaml
+
+<span class="comment"># Output example:</span>
+<span class="comment"># Valid topology 'rapidwebs-rwdn' (7 nodes, 11 services).</span>
+            </div>
+        </div>
+
+        <div id="tab-generate" class="tab-content">
+            <div class="code-block">
+<span class="comment"># Generate all artifacts</span>
+rw-blueprint generate topology.yaml --output docs/generated/
+
+<span class="comment"># Generates:</span>
+<span class="comment"># - docs/generated/quadlet/*.container</span>
+<span class="comment"># - docs/generated/diagrams/architecture.mmd</span>
+<span class="comment"># - docs/generated/docs/topology.md</span>
+            </div>
+        </div>
+
+        <div id="tab-probe" class="tab-content">
+            <div class="code-block">
+<span class="comment"># Run probes on multiple nodes</span>
+rw-blueprint probe --nodes srv1,infra,enterprise,dev --output docs/live.json
+
+<span class="comment"># Run specific probes</span>
+rw-blueprint probe --probes incus,podman,port --nodes infra
+            </div>
+        </div>
+
+        <div id="tab-deploy" class="tab-content">
+            <div class="code-block">
+<span class="comment"># Preview deployment (dry-run)</span>
+rw-blueprint deploy topology.yaml --node infra --dry-run
+
+<span class="comment"># Deploy with auto-rollback on health check failure</span>
+rw-blueprint deploy topology.yaml --node infra
+
+<span class="comment"># Deploy specific services</span>
+rw-blueprint deploy topology.yaml --node infra --services honcho-api,caddy
+
+<span class="comment"># Force deploy (skip confirmation + auto-rollback)</span>
+rw-blueprint deploy topology.yaml --node infra --force
+            </div>
+        </div>
+
+        <div id="tab-image" class="tab-content">
+            <div class="code-block">
+<span class="comment"># List images on node</span>
+rw-blueprint image list --node infra
+
+<span class="comment"># Build image from source</span>
+rw-blueprint image build honcho-api --source /home/sysop/honcho --node infra
+
+<span class="comment"># Pull from registry</span>
+rw-blueprint image pull honcho:latest --registry ghcr.io
+
+<span class="comment"># Prune old images</span>
+rw-blueprint image prune --node infra --keep-latest 5
+            </div>
+        </div>
+    </section>
+
+    <!-- Metrics -->
+    <section id="metrics" class="section">
+        <div class="section-header">
+            <h2>Project Metrics</h2>
+            <p>Quality gates and coverage statistics.</p>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--space-xl);">
+            <div class="chart-container">
+                <canvas id="coverageChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="testsChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation -->
+    <section id="docs" class="section">
+        <div class="section-header">
+            <h2>Documentation</h2>
+            <p>Comprehensive guides and references.</p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>📚 User Guide</h3>
+                <p>Complete deployment workflows, troubleshooting, and best practices.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🏗️ Architecture</h3>
+                <p>System design, component interactions, and data flow diagrams.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔧 API Reference</h3>
+                <p>OpenAPI specification for MCP server integration.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📖 Examples</h3>
+                <p>Sample topologies for basic, advanced, and minimal deployments.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔄 Migration</h3>
+                <p>Upgrade guides and breaking changes documentation.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🛡️ Security</h3>
+                <p>Security policy, vulnerability reporting, and audit trail.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+        <h2>Ready to declare your infrastructure?</h2>
+        <p>Start with a single YAML file and let rw_blueprint handle the rest.</p>
+        <div class="hero-actions">
+            <a href="https://github.com/RapidWebs-Enterprise/rw_blueprint" class="btn btn-primary">Star on GitHub</a>
+            <a href="#cli" class="btn btn-secondary">View CLI Reference</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Built by <a href="https://rapidwebs.org">RapidWebs Enterprise</a> · MIT License · v0.2.0</p>
+    </footer>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Chart.js initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            // Coverage chart
+            const coverageCtx = document.getElementById('coverageChart').getContext('2d');
+            new Chart(coverageCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Test Coverage', 'Documentation', 'Remaining'],
+                    datasets: [{
+                        data: [95, 90, 5],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#06b6d4',
+                            '#1e293b'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Project Quality Metrics',
+                            color: '#f1f5f9',
+                            font: { size: 16, weight: '600' }
+                        },
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+
+            // Tests chart
+            const testsCtx = document.getElementById('testsChart').getContext('2d');
+            new Chart(testsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Schema', 'Graph', 'Executor', 'Lifecycle', 'Security', 'Integration'],
+                    datasets: [{
+                        label: 'Tests',
+                        data: [19, 12, 35, 9, 17, 8],
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Test Distribution by Module',
+                            color: '#f1f5f9',
+                            font: { size: 16, weight: '600' }
+                        },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#64748b' },
+                            grid: { color: 'rgba(59, 130, 246, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#64748b' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
