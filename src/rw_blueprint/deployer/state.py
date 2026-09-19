@@ -22,6 +22,8 @@ class DeploymentRecord:
     status: str  # "healthy", "failed", "rolled_back"
     image: str
     config_hash: str
+    #: Optional pinned image version (git SHA or semantic version).
+    pinned_version: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""

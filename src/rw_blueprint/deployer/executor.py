@@ -1,15 +1,19 @@
 """Deploy executor - executes deployment plans.
 
 Transfers quadlet files and starts services via SSH.
+Integrates with ImageLifecycle for image-aware deployments.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Protocol
 
+from rw_blueprint.deployer.lifecycle import ImageLifecycle
 from rw_blueprint.deployer.plan import DeploymentAction, DeploymentPlan
 from rw_blueprint.deployer.targets import RunResult, TargetManager
+from rw_blueprint.schema import ImageRef
 
 
 class ServiceLike(Protocol):
@@ -35,6 +39,12 @@ class DeployExecutor:
 
     def __init__(self, target_manager: TargetManager):
         self.target = target_manager
+        self.lifecycle: ImageLifecycle | None = None
+        self._image_cache: dict[str, ImageRef] = {}
+
+    def set_image_lifecycle(self, lifecycle: ImageLifecycle) -> None:
+        """Inject ImageLifecycle for image-aware deployments."""
+        self.lifecycle = lifecycle
 
     def execute(self, plan: DeploymentPlan, node: str, output_dir: Path | None = None) -> DeploymentResult:
         """Execute deployment plan on target node.
@@ -73,6 +83,25 @@ class DeployExecutor:
             actions_completed=actions_completed,
             error_message=error_message,
         )
+
+    def _ensure_image(self, node: str, service_id: str, image: str | None) -> ImageRef | None:
+        """Ensure the required image exists on the target node.
+
+        If the service has image_config, build/pull the image first.
+        Returns the resolved ImageRef, or None if no image config.
+        """
+        if self.lifecycle is None or image is None:
+            return None
+
+        cache_key = f"{node}:{service_id}"
+        if cache_key in self._image_cache:
+            return self._image_cache[cache_key]
+
+        # For now, just inspect the existing image
+        image_ref = self.lifecycle.inspect(node, image)
+        if image_ref:
+            self._image_cache[cache_key] = image_ref
+        return image_ref
 
     def _deploy_service(self, node: str, action: "DeploymentAction", output_dir: Path | None = None) -> None:
         """Deploy a single service."""

@@ -199,3 +199,52 @@ def test_structured_port_defaults() -> None:
     assert port.port == 5432
     assert port.host_port == 5432
     assert port.protocol == "tcp"
+
+
+def test_service_with_image_config() -> None:
+    """A service can optionally have image_config."""
+    data = _valid_topology()
+    data["services"][0]["image_config"] = {
+        "build_context": "/home/sysop/honcho",
+        "tag_strategy": "git-sha",
+        "labels": {"org.git.sha": "abc123"},
+    }
+    topology = Topology.model_validate(data)
+    svc = topology.services[0]
+    assert svc.image_config is not None
+    assert svc.image_config.build_context == "/home/sysop/honcho"
+    assert svc.image_config.tag_strategy == "git-sha"
+    assert svc.image_config.labels["org.git.sha"] == "abc123"
+
+
+def test_service_without_image_config() -> None:
+    """Services without image_config remain backward compatible."""
+    topology = Topology.model_validate(_valid_topology())
+    assert topology.services[0].image_config is None
+
+
+def test_image_config_forbids_unknown_fields() -> None:
+    """Unknown fields in image_config are rejected."""
+    data = _valid_topology()
+    data["services"][0]["image_config"] = {"bogus_field": True}
+    with pytest.raises(ValidationError):
+        Topology.model_validate(data)
+
+
+def test_image_ref_reference_property() -> None:
+    """ImageRef.reference formats correctly with and without digest."""
+    from rw_blueprint.schema import ImageRef
+
+    ref = ImageRef(name="honcho", tag="v1.0", source="build")
+    assert ref.reference == "honcho:v1.0"
+
+    ref_with_digest = ImageRef(name="honcho", tag="v1.0", digest="sha256:abc123")
+    assert ref_with_digest.reference == "honcho:v1.0@sha256:abc123"
+
+
+def test_image_ref_default_source() -> None:
+    """ImageRef defaults source to 'pull'."""
+    from rw_blueprint.schema import ImageRef
+
+    ref = ImageRef(name="honcho", tag="latest")
+    assert ref.source == "pull"

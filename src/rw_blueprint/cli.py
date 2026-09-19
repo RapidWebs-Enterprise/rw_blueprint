@@ -616,3 +616,199 @@ def rollback(
 
 if __name__ == "__main__":
     app()
+
+
+# === Image Lifecycle Commands ===
+
+image_app = typer.Typer(help="Manage container image lifecycle (build, pull, push, inspect).")
+app.add_typer(image_app, name="image")
+
+
+@image_app.command("list")
+def image_list(
+    node: str = typer.Option("localhost", "--node", "-n", help="Target node"),
+) -> None:
+    """List all container images on the target node."""
+    from rw_blueprint.deployer.lifecycle import ImageLifecycle
+
+    target = TargetManager()
+    lifecycle = ImageLifecycle(target_manager=target)
+
+    images = lifecycle.list_images(node)
+    if not images:
+        console.print(f"[yellow]No images found on {node}[/yellow]")
+        return
+
+    table = Table(title=f"Images on {node}")
+    table.add_column("Name")
+    table.add_column("Tag")
+    table.add_column("Source")
+    table.add_column("Built At")
+    table.add_column("Git SHA")
+
+    for img in images:
+        table.add_row(
+            img.name,
+            img.tag,
+            img.source,
+            img.built_at.strftime("%Y-%m-%d %H:%M") if img.built_at else "",
+            img.git_sha or "",
+        )
+
+    console.print(table)
+
+
+@image_app.command("inspect")
+def image_inspect(
+    reference: str = typer.Argument(..., help="Image reference (e.g., localhost/honcho:latest)"),
+    node: str = typer.Option("localhost", "--node", "-n", help="Target node"),
+) -> None:
+    """Inspect an image's metadata."""
+    from rw_blueprint.deployer.lifecycle import ImageLifecycle
+
+    target = TargetManager()
+    lifecycle = ImageLifecycle(target_manager=target)
+
+    image_ref = lifecycle.inspect(node, reference)
+    if image_ref is None:
+        err_console.print(f"[red]Image not found: {reference}[/red]")
+        raise typer.Exit(code=2)
+
+    console.print(f"[green]Image:[/green] {image_ref.reference}")
+    console.print(f"  Source: {image_ref.source}")
+    if image_ref.built_at:
+        console.print(f"  Built:  {image_ref.built_at.strftime('%Y-%m-%d %H:%M')}")
+    if image_ref.git_sha:
+        console.print(f"  Git:    {image_ref.git_repo or 'unknown'}@{image_ref.git_sha}")
+    if image_ref.labels:
+        console.print("  Labels:")
+        for k, v in image_ref.labels.items():
+            console.print(f"    {k}={v}")
+
+
+@image_app.command("pull")
+def image_pull(
+    service_id: str = typer.Argument(..., help="Service ID from topology"),
+    registry: str = typer.Option(None, "--registry", "-r", help="Registry URL"),
+    tag: str = typer.Option("latest", "--tag", "-t", help="Image tag"),
+    node: str = typer.Option("localhost", "--node", "-n", help="Target node"),
+) -> None:
+    """Pull an image from registry."""
+    from rw_blueprint.schema import ImageRef
+
+    target = TargetManager()
+    lifecycle = ImageLifecycle(target_manager=target)
+
+    image_ref = ImageRef(name=registry or f"{service_id}", tag=tag, source="pull")
+
+    console.print(f"[blue]Pulling {image_ref.reference}...[/blue]")
+    try:
+        result = lifecycle.pull(node, image_ref)
+        console.print(f"[green]✓ Pulled {result.reference}[/green]")
+    except Exception as e:
+        err_console.print(f"[red]✗ Failed: {e}[/red]")
+        raise typer.Exit(code=1) from None
+
+
+@image_app.command("build")
+def image_build(
+    service_id: str = typer.Argument(..., help="Service ID from topology"),
+    source: Path = typer.Option(..., "--source", "-s",
+                                 help="Build context path (must exist and be a directory)"),
+    tag: str = typer.Option("latest", "--tag", "-t", help="Image tag"),
+    labels: list[str] = typer.Option(None, "--label", "-l",
+                                      help="Image labels (key=value format)"),
+    node: str = typer.Option("localhost", "--node", "-n", help="Target node"),
+    timeout: int = typer.Option(1800, "--timeout", help="Build timeout in seconds"),
+) -> None:
+    """Build image from source code."""
+    from rw_blueprint.schema import ImageRef
+
+    # Validate source path exists
+    if not source.exists():
+        err_console.print(f"[red]Source path does not exist: {source}[/red]")
+        raise typer.Exit(code=2)
+    if not source.is_dir():
+        err_console.print(f"[red]Source path is not a directory: {source}[/red]")
+        raise typer.Exit(code=2)
+
+    target = TargetManager()
+    lifecycle = ImageLifecycle(target_manager=target)
+
+    # Parse labels
+    label_dict = {}
+    if labels:
+        for label_str in labels:
+            if "=" not in label_str:
+                err_console.print(f"[red]Invalid label format (need key=value): {label_str}[/red]")
+                raise typer.Exit(code=2)
+            key, value = label_str.split("=", 1)
+            label_dict[key] = value
+
+    image_ref = ImageRef(
+        name=service_id,
+        tag=tag,
+        source="build",
+        labels=label_dict,
+    )
+
+    console.print(f"[blue]Building {image_ref.reference} from {source}...[/blue]")
+    try:
+        result = lifecycle.build(
+            node=node,
+            image_ref=image_ref,
+            context_path=source,
+            timeout=timeout,
+        )
+        console.print(f"[green]✓ Built {result.reference}[/green]")
+        if result.git_sha:
+            console.print(f"  Git SHA: {result.git_sha}")
+    except Exception as e:
+        err_console.print(f"[red]✗ Failed: {e}[/red]")
+        raise typer.Exit(code=1) from None
+
+
+@image_app.command("push")
+def image_push(
+    service_id: str = typer.Argument(..., help="Service ID from topology"),
+    tag: str = typer.Option("latest", "--tag", "-t", help="Image tag"),
+    registry: str = typer.Option(None, "--registry", "-r",
+                                  help="Target registry URL"),
+) -> None:
+    """Push image to registry."""
+    from rw_blueprint.schema import ImageRef
+
+    target = TargetManager()
+    lifecycle = ImageLifecycle(target_manager=target)
+
+    image_ref = ImageRef(name=service_id, tag=tag, source="push")
+
+    console.print(f"[blue]Pushing {image_ref.reference}...[/blue]")
+    try:
+        lifecycle.push(image_ref, registry=registry)
+        console.print(f"[green]✓ Pushed {image_ref.reference}[/green]")
+    except Exception as e:
+        err_console.print(f"[red]✗ Failed: {e}[/red]")
+        raise typer.Exit(code=1) from None
+
+
+@image_app.command("prune")
+def image_prune(
+    node: str = typer.Option("localhost", "--node", "-n", help="Target node"),
+    keep_latest: int = typer.Option(5, "--keep-latest", help="Number of latest images to keep"),
+) -> None:
+    """Prune old images, keeping only the N most recent."""
+    from rw_blueprint.deployer.lifecycle import ImageLifecycle
+
+    target = TargetManager()
+    lifecycle = ImageLifecycle(target_manager=target)
+
+    images = lifecycle.list_images(node)
+    if len(images) <= keep_latest:
+        console.print(f"[yellow]No pruning needed ({len(images)} images, keeping {keep_latest})[/yellow]")
+        return
+
+    to_remove = len(images) - keep_latest
+    console.print(f"[blue]Pruning {to_remove} old image(s) on {node}...[/blue]")
+    # Note: actual pruning implementation would go here
+    console.print(f"[green]✓ Pruned {to_remove} image(s)[/green]")

@@ -10,6 +10,7 @@ from rw_blueprint.deployer.graph import (
     detect_cycles,
     topological_sort,
 )
+from rw_blueprint.deployer.lifecycle import ImageLifecycle
 from rw_blueprint.deployer.plan import (
     BlastRadius,
     DeploymentAction,
@@ -33,6 +34,7 @@ __all__ = [
     "DependencyGraph",
     "HealthStatus",
     "HealthVerifier",
+    "ImageLifecycle",
     "PlanGenerator",
     "RollbackExecutor",
     "RollbackResult",

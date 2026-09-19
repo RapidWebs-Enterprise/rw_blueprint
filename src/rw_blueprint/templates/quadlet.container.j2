@@ -9,4 +9,7 @@ After={{ depends_on | join(".service ") }}.service
 [Container]
 {% if service.image %}Image={{ service.image }}
 {% endif %}{% for p in service.ports %}PublishPort={{ p.host_port }}:{{ p.port }}
-{% endfor %}
+{% endfor %}{% if service.image_config and service.image_config.labels %}{% for key, value in service.image_config.labels.items() %}Label={{ key }}={{ value }}
+{% endfor %}{% endif %}{% if service.managed_by == "quadlet" %}[Service]
+Environment="DB_CONNECTION_URI={{ service.environment | default('') }}"
+{% endif %}

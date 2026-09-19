@@ -23,12 +23,14 @@ Design principles (grounded in the schema-design research report):
 
 from __future__ import annotations
 
-from datetime import date
+from dataclasses import dataclass, field
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 SCHEMA_VERSION = "0.2"
+TAG_STRATEGY = Literal["latest", "git-sha", "semver"]
 
 NodeType = Literal["host", "container", "external", "device"]
 ManagedBy = Literal["quadlet", "systemd", "host", "manual"]
@@ -102,6 +104,48 @@ class Port(_StrictModel):
         return self.public if self.public is not None else self.port
 
 
+@dataclass(frozen=True)
+class ImageRef:
+    """Reference to a container image with metadata.
+
+    This is an internal dataclass used by the image lifecycle subsystem
+    to track which image is built/pulled and its provenance.
+    """
+
+    name: str
+    tag: str
+    digest: str | None = None
+    source: str = "pull"  # "build" | "pull" | "load"
+    built_at: datetime | None = None
+    git_sha: str | None = None
+    git_repo: str | None = None
+    labels: dict[str, str] = field(default_factory=dict)
+
+    @property
+    def reference(self) -> str:
+        """Full image reference: name:tag or name:tag@digest."""
+        ref = f"{self.name}:{self.tag}"
+        if self.digest:
+            ref += f"@{self.digest}"
+        return ref
+
+
+class ImageConfig(BaseModel):
+    """Optional image configuration for a service.
+
+    When present, controls how the image lifecycle subsystem
+    manages the service's container image.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    source: str | None = None  # Registry URL (e.g., ghcr.io/rapidwebs/honcho)
+    build_context: str | None = None  # Local path for podman build
+    tag_strategy: TAG_STRATEGY = "latest"
+    labels: dict[str, str] = field(default_factory=dict)
+    build_args: dict[str, str] = field(default_factory=dict)
+
+
 class Service(_StrictModel):
     """A running workload hosted on a node, exposing ports."""
 
@@ -110,6 +154,8 @@ class Service(_StrictModel):
     kind: ServiceKind
     #: Container image reference (emitted into quadlet units).
     image: str | None = None
+    #: Optional image lifecycle configuration.
+    image_config: ImageConfig | None = None
     ports: list[Port] = Field(default_factory=list)
     managed_by: ManagedBy = "manual"
     #: Service type: container (podman quadlet) or systemd (native unit).
