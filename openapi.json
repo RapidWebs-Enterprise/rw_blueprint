@@ -16,7 +16,7 @@
   "servers": [
     {
       "url": "http://localhost:8765",
-      "description": "Local MCP server"
+      "description": "Local MCP server (HTTP/SSE transport)"
     }
   ],
   "paths": {},
@@ -25,200 +25,94 @@
       "Topology": {
         "type": "object",
         "properties": {
-          "schema_version": {
-            "type": "string",
-            "example": "0.2"
-          },
-          "metadata": {
-            "$ref": "#/components/schemas/Metadata"
-          },
-          "zones": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Zone"
-            }
-          },
-          "nodes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Node"
-            }
-          },
-          "services": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Service"
-            }
-          },
-          "links": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Link"
-            }
-          },
-          "dependencies": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Dependency"
-            }
-          }
+          "schema_version": { "type": "string", "example": "0.2" },
+          "metadata": { "$ref": "#/components/schemas/Metadata" },
+          "zones": { "type": "array", "items": { "$ref": "#/components/schemas/Zone" } },
+          "nodes": { "type": "array", "items": { "$ref": "#/components/schemas/Node" } },
+          "services": { "type": "array", "items": { "$ref": "#/components/schemas/Service" } },
+          "links": { "type": "array", "items": { "$ref": "#/components/schemas/Link" } },
+          "dependencies": { "type": "array", "items": { "$ref": "#/components/schemas/Dependency" } }
         }
       },
       "Metadata": {
         "type": "object",
         "required": ["name", "updated"],
         "properties": {
-          "name": {
-            "type": "string",
-            "example": "rapidwebs-rwdn"
-          },
-          "description": {
-            "type": "string",
-            "example": "RapidWebs Distributed Network"
-          },
-          "updated": {
-            "type": "string",
-            "format": "date",
-            "example": "2026-09-19"
-          }
+          "name": { "type": "string", "example": "rapidwebs-rwdn" },
+          "description": { "type": "string", "example": "RapidWebs Distributed Network" },
+          "updated": { "type": "string", "format": "date", "example": "2026-09-19" }
         }
       },
       "Zone": {
         "type": "object",
         "required": ["id", "name"],
         "properties": {
-          "id": {
-            "type": "string",
-            "example": "infra"
-          },
-          "name": {
-            "type": "string",
-            "example": "Infrastructure"
-          }
+          "id": { "type": "string", "example": "infra" },
+          "name": { "type": "string", "example": "Infrastructure" }
         }
       },
       "Node": {
         "type": "object",
         "required": ["id", "zone", "type"],
         "properties": {
-          "id": {
-            "type": "string",
-            "example": "infra"
-          },
-          "zone": {
-            "type": "string",
-            "example": "infra"
-          },
-          "type": {
-            "type": "string",
-            "enum": ["host", "container", "external"],
-            "example": "container"
-          },
-          "host": {
-            "type": "string",
-            "example": "srv1"
-          },
-          "tailscale_ip": {
-            "type": "string",
-            "example": "100.79.58.118"
-          }
+          "id": { "type": "string", "example": "infra" },
+          "zone": { "type": "string", "example": "infra" },
+          "type": { "type": "string", "enum": ["host", "container", "external"] },
+          "host": { "type": "string", "example": "srv1" },
+          "tailscale_ip": { "type": "string", "example": "100.79.58.118" }
         }
       },
       "Service": {
         "type": "object",
         "required": ["id", "node", "kind"],
         "properties": {
-          "id": {
-            "type": "string",
-            "example": "honcho-api"
-          },
-          "node": {
-            "type": "string",
-            "example": "infra"
-          },
-          "kind": {
-            "type": "string",
-            "enum": ["application", "database", "proxy", "cache", "queue", "storage", "observability", "messaging", "dns", "web"],
-            "example": "application"
-          },
-          "service_type": {
-            "type": "string",
-            "enum": ["container", "systemd"],
-            "example": "container"
-          },
-          "image": {
-            "type": "string",
-            "example": "localhost/honcho:latest"
-          },
-          "ports": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Port"
-            }
-          }
+          "id": { "type": "string", "example": "honcho-api" },
+          "node": { "type": "string", "example": "infra" },
+          "kind": { "type": "string", "enum": ["application", "database", "proxy", "cache", "queue", "storage", "observability", "messaging", "dns", "web"] },
+          "service_type": { "type": "string", "enum": ["container", "systemd"] },
+          "image": { "type": "string", "example": "localhost/honcho:latest" },
+          "ports": { "type": "array", "items": { "$ref": "#/components/schemas/Port" } }
         }
       },
       "Port": {
         "type": "object",
         "properties": {
-          "port": {
-            "type": "integer",
-            "example": 8000
-          },
-          "public": {
-            "type": "integer",
-            "example": 8000
-          },
-          "protocol": {
-            "type": "string",
-            "enum": ["tcp", "udp"],
-            "example": "tcp"
-          }
+          "port": { "type": "integer", "example": 8000 },
+          "public": { "type": "integer", "example": 8000 },
+          "protocol": { "type": "string", "enum": ["tcp", "udp"] }
         }
       },
       "Link": {
         "type": "object",
         "required": ["id", "from", "to"],
         "properties": {
-          "id": {
-            "type": "string",
-            "example": "srv1-to-infra"
-          },
-          "from": {
-            "type": "string",
-            "example": "srv1"
-          },
-          "to": {
-            "type": "string",
-            "example": "infra"
-          },
-          "protocol": {
-            "type": "string",
-            "example": "wireguard"
-          }
+          "id": { "type": "string", "example": "srv1-to-infra" },
+          "from": { "type": "string", "example": "srv1" },
+          "to": { "type": "string", "example": "infra" },
+          "protocol": { "type": "string", "example": "wireguard" }
         }
       },
       "Dependency": {
         "type": "object",
         "required": ["id", "from", "to"],
         "properties": {
-          "id": {
-            "type": "string",
-            "example": "honcho-requires-pgvector"
-          },
-          "from": {
-            "type": "string",
-            "example": "honcho-api"
-          },
-          "to": {
-            "type": "string",
-            "example": "pgvector"
-          },
-          "type": {
-            "type": "string",
-            "enum": ["requires", "observes", "provides"],
-            "example": "requires"
-          }
+          "id": { "type": "string", "example": "honcho-requires-pgvector" },
+          "from": { "type": "string", "example": "honcho-api" },
+          "to": { "type": "string", "example": "pgvector" },
+          "type": { "type": "string", "enum": ["requires", "observes", "provides"] }
+        }
+      },
+      "DriftItem": {
+        "type": "object",
+        "properties": {
+          "category": { "type": "string", "enum": ["missing", "extra", "mismatched"] },
+          "severity": { "type": "string", "enum": ["critical", "warning", "info"] },
+          "entity_type": { "type": "string" },
+          "entity_id": { "type": "string" },
+          "field": { "type": "string" },
+          "declared": { "type": "string" },
+          "observed": { "type": "string" },
+          "message": { "type": "string" }
         }
       }
     }
@@ -230,30 +124,44 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "path": {
-            "type": "string",
-            "description": "Path to topology YAML file"
-          }
+          "path": { "type": "string", "description": "Path to topology YAML file" }
         },
         "required": ["path"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "valid": { "type": "boolean" },
+          "name": { "type": "string" },
+          "node_count": { "type": "integer" },
+          "service_count": { "type": "integer" },
+          "link_count": { "type": "integer" },
+          "zone_count": { "type": "integer" },
+          "dependency_count": { "type": "integer" },
+          "schema_version": { "type": "string" },
+          "error": { "type": "string", "nullable": true }
+        }
       }
     },
     {
-      "name": "generate_artifacts",
-      "description": "Generate diagrams, docs, and IaC from topology",
+      "name": "generate_artifacts_tool",
+      "description": "Generate diagrams, docs, and IaC skeletons from a topology YAML",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "path": {
-            "type": "string",
-            "description": "Path to topology YAML file"
-          },
-          "output": {
-            "type": "string",
-            "description": "Output directory"
-          }
+          "path": { "type": "string", "description": "Path to topology YAML file" },
+          "output_dir": { "type": "string", "description": "Output directory", "default": "generated/" }
         },
         "required": ["path"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "artifact_count": { "type": "integer" },
+          "artifacts": { "type": "array", "items": { "type": "string" } },
+          "output_dir": { "type": "string" },
+          "error": { "type": "string", "nullable": true }
+        }
       }
     },
     {
@@ -262,46 +170,82 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "nodes": {
-            "type": "string",
-            "description": "Comma-separated list of nodes"
-          },
-          "output": {
-            "type": "string",
-            "description": "Output JSON file path"
+          "probe_names": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Specific probes to run (default: all)"
           }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "nodes": { "type": "array" },
+          "services": { "type": "array" },
+          "links": { "type": "array" },
+          "probe_results": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "string" },
+                "nodes": { "type": "integer" },
+                "services": { "type": "integer" },
+                "links": { "type": "integer" },
+                "errors": { "type": "array" },
+                "duration_ms": { "type": "number" }
+              }
+            }
+          },
+          "error": { "type": "string", "nullable": true }
         }
       }
     },
     {
-      "name": "detect_drift",
-      "description": "Compare topology against live state",
+      "name": "reconcile_topology",
+      "description": "Reconcile declared topology against observed live state",
       "inputSchema": {
         "type": "object",
+        "required": ["topology_path", "live_state_path"],
         "properties": {
-          "topology": {
-            "type": "string",
-            "description": "Path to topology YAML"
+          "topology_path": { "type": "string", "description": "Path to topology YAML" },
+          "live_state_path": { "type": "string", "description": "Path to live state JSON" },
+          "ignore_rules_path": { "type": "string", "description": "Optional ignore rules YAML" },
+          "fail_on": { "type": "string", "enum": ["critical", "warning", "info", "none"], "default": "critical" },
+          "include_remediation": { "type": "boolean", "default": false }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "topology_file": { "type": "string" },
+          "live_state_file": { "type": "string" },
+          "summary": { "type": "object" },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/DriftItem" } },
+          "remediation": {
+            "type": "object",
+            "properties": {
+              "requires_hitl": { "type": "boolean" },
+              "blast_summary": { "type": "string" },
+              "proposals": { "type": "array" }
+            }
           },
-          "live_state": {
-            "type": "string",
-            "description": "Path to live state JSON"
-          }
-        },
-        "required": ["topology", "live_state"]
+          "schema_version": { "type": "string" },
+          "error": { "type": "string", "nullable": true }
+        }
       }
     }
   ],
   "x-mcp-resources": [
     {
-      "uri": "schema://topology",
-      "name": "Topology Schema",
-      "description": "JSON Schema for topology.yaml validation"
+      "uri_pattern": "topology://{path}",
+      "name": "Topology File",
+      "description": "Read a topology YAML file as text"
     },
     {
-      "uri": "report://drift",
-      "name": "Latest Drift Report",
-      "description": "Most recent drift detection report"
+      "uri": "schema://version",
+      "name": "Schema Version",
+      "description": "Get the current topology schema version"
     }
   ]
 }
