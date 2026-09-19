@@ -253,6 +253,9 @@ rw_blueprint/
 ├── SUPPORT.md                   # Support channels
 │
 ├── docs/
+│   ├── demo/                    # Product demo site
+│   │   ├── index.html           # Landing page
+│   │   └── README.md            # This file
 │   ├── guides/
 │   │   ├── deployment.md       # Deployment workflows
 │   │   └── troubleshooting.md  # Common issues

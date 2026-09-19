@@ -3,52 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>rw_blueprint — Declarative Infrastructure Engine</title>
-    
-    <!-- Fonts -->
+    <title>rw_blueprint — Infrastructure Source of Truth</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
-    <!-- Mermaid -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-    
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    
     <style>
         :root {
-            /* Enterprise Blue Palette */
-            --color-bg: #0a0f1a;
-            --color-surface: #111827;
-            --color-surface-elevated: #1a2235;
-            --color-border: rgba(59, 130, 246, 0.15);
-            --color-border-hover: rgba(59, 130, 246, 0.4);
-            
-            /* Primary Blues */
-            --color-primary: #3b82f6;
-            --color-primary-light: #60a5fa;
-            --color-primary-dark: #1d4ed8;
-            --color-primary-glow: rgba(59, 130, 246, 0.3);
-            
-            /* Accent Colors */
-            --color-accent-cyan: #06b6d4;
-            --color-accent-emerald: #10b981;
-            --color-accent-violet: #8b5cf6;
-            --color-accent-amber: #f59e0b;
-            
-            /* Text Colors */
-            --color-text-primary: #f1f5f9;
-            --color-text-secondary: #94a3b8;
-            --color-text-muted: #64748b;
-            --color-text-inverse: #0f172a;
-            
-            /* Success/Warning/Error */
-            --color-success: #10b981;
-            --color-warning: #f59e0b;
-            --color-error: #ef4444;
-            
-            /* Spacing */
+            --bg: #0a0f1a;
+            --surface: #111827;
+            --surface-elevated: #1a2235;
+            --border: rgba(59, 130, 246, 0.15);
+            --border-hover: rgba(59, 130, 246, 0.4);
+            --primary: #3b82f6;
+            --primary-light: #60a5fa;
+            --primary-dark: #1d4ed8;
+            --primary-glow: rgba(59, 130, 246, 0.3);
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-violet: #8b5cf6;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
             --space-xs: 0.25rem;
             --space-sm: 0.5rem;
             --space-md: 1rem;
@@ -56,40 +36,19 @@
             --space-xl: 2rem;
             --space-2xl: 3rem;
             --space-3xl: 4rem;
-            
-            /* Typography */
-            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
-            
-            /* Borders */
             --radius-sm: 4px;
             --radius-md: 8px;
             --radius-lg: 12px;
             --radius-xl: 16px;
-            
-            /* Shadows */
-            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-            --shadow-glow: 0 0 20px var(--color-primary-glow);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
-            font-family: var(--font-sans);
-            background: var(--color-bg);
-            color: var(--color-text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
             line-height: 1.6;
-            min-height: 100vh;
         }
 
         /* Header */
@@ -99,80 +58,67 @@
             left: 0;
             right: 0;
             z-index: 100;
-            background: rgba(10, 15, 26, 0.8);
+            background: rgba(10, 15, 26, 0.9);
             backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--color-border);
+            border-bottom: 1px solid var(--border);
         }
-
         .header-inner {
-            max-width: 1280px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: var(--space-md) var(--space-xl);
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
-
         .logo {
             display: flex;
             align-items: center;
             gap: var(--space-sm);
             font-weight: 600;
             font-size: 1.125rem;
-            color: var(--color-text-primary);
+            color: var(--text-primary);
             text-decoration: none;
         }
-
         .logo-icon {
             width: 32px;
             height: 32px;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-accent-cyan));
+            background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
             border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
+            font-size: 0.75rem;
         }
-
         .nav-links {
             display: flex;
             gap: var(--space-xl);
             list-style: none;
         }
-
         .nav-links a {
-            color: var(--color-text-secondary);
+            color: var(--text-secondary);
             text-decoration: none;
             font-size: 0.875rem;
             font-weight: 500;
             transition: color 0.2s;
         }
-
-        .nav-links a:hover {
-            color: var(--color-primary-light);
-        }
-
+        .nav-links a:hover { color: var(--primary-light); }
         .nav-cta {
-            background: var(--color-primary);
+            background: var(--primary);
             color: white !important;
             padding: var(--space-sm) var(--space-lg);
             border-radius: var(--radius-md);
-            transition: background 0.2s, transform 0.1s;
+            transition: all 0.2s;
         }
+        .nav-cta:hover { background: var(--primary-dark); }
 
-        .nav-cta:hover {
-            background: var(--color-primary-dark);
-            transform: translateY(-1px);
-        }
-
-        /* Hero Section */
+        /* Hero */
         .hero {
             padding: calc(80px + var(--space-3xl)) var(--space-xl) var(--space-3xl);
             text-align: center;
             position: relative;
             overflow: hidden;
         }
-
         .hero::before {
             content: '';
             position: absolute;
@@ -181,61 +127,54 @@
             transform: translateX(-50%);
             width: 800px;
             height: 400px;
-            background: radial-gradient(ellipse, var(--color-primary-glow) 0%, transparent 70%);
+            background: radial-gradient(ellipse, var(--primary-glow) 0%, transparent 70%);
             pointer-events: none;
         }
-
         .hero-badge {
             display: inline-flex;
             align-items: center;
             gap: var(--space-sm);
-            background: var(--color-surface-elevated);
-            border: 1px solid var(--color-border);
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
             padding: var(--space-sm) var(--space-lg);
             border-radius: 9999px;
             font-size: 0.875rem;
-            color: var(--color-text-secondary);
+            color: var(--text-secondary);
             margin-bottom: var(--space-xl);
         }
-
         .hero-badge-dot {
             width: 8px;
             height: 8px;
-            background: var(--color-accent-emerald);
+            background: var(--accent-emerald);
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
-
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
-
         .hero h1 {
-            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-size: clamp(2rem, 5vw, 3.5rem);
             font-weight: 700;
             line-height: 1.1;
             margin-bottom: var(--space-lg);
-            background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-primary-light) 100%);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-light) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-
         .hero p {
-            font-size: 1.25rem;
-            color: var(--color-text-secondary);
-            max-width: 640px;
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            max-width: 600px;
             margin: 0 auto var(--space-2xl);
         }
-
         .hero-actions {
             display: flex;
             gap: var(--space-md);
             justify-content: center;
             flex-wrap: wrap;
         }
-
         .btn {
             display: inline-flex;
             align-items: center;
@@ -249,111 +188,95 @@
             cursor: pointer;
             font-size: 1rem;
         }
-
         .btn-primary {
-            background: var(--color-primary);
+            background: var(--primary);
             color: white;
-            box-shadow: var(--shadow-glow);
+            box-shadow: 0 0 20px var(--primary-glow);
         }
-
         .btn-primary:hover {
-            background: var(--color-primary-dark);
+            background: var(--primary-dark);
             transform: translateY(-2px);
-            box-shadow: 0 0 30px var(--color-primary-glow);
+            box-shadow: 0 0 30px var(--primary-glow);
         }
-
         .btn-secondary {
-            background: var(--color-surface);
-            color: var(--color-text-primary);
-            border: 1px solid var(--color-border);
+            background: var(--surface);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
         }
-
         .btn-secondary:hover {
-            border-color: var(--color-border-hover);
-            background: var(--color-surface-elevated);
+            border-color: var(--border-hover);
+            background: var(--surface-elevated);
         }
 
-        /* Stats Section */
+        /* Stats */
         .stats {
             padding: var(--space-3xl) var(--space-xl);
-            border-top: 1px solid var(--color-border);
-            border-bottom: 1px solid var(--color-border);
-            background: var(--color-surface);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
         }
-
         .stats-grid {
             max-width: 1024px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: var(--space-2xl);
         }
-
-        .stat-item {
-            text-align: center;
-        }
-
+        .stat-item { text-align: center; }
         .stat-value {
-            font-size: 2.5rem;
+            font-size: 2.25rem;
             font-weight: 700;
-            color: var(--color-primary-light);
+            color: var(--primary-light);
             line-height: 1;
         }
-
         .stat-label {
             font-size: 0.875rem;
-            color: var(--color-text-muted);
+            color: var(--text-muted);
             margin-top: var(--space-sm);
         }
 
         /* Sections */
         .section {
             padding: var(--space-3xl) var(--space-xl);
-            max-width: 1280px;
+            max-width: 1200px;
             margin: 0 auto;
         }
-
         .section-header {
             text-align: center;
             margin-bottom: var(--space-3xl);
         }
-
         .section-header h2 {
-            font-size: 2rem;
+            font-size: 1.75rem;
             font-weight: 700;
             margin-bottom: var(--space-md);
         }
-
         .section-header p {
-            color: var(--color-text-secondary);
+            color: var(--text-secondary);
             max-width: 600px;
             margin: 0 auto;
         }
 
-        /* Features Grid */
+        /* Feature Cards */
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: var(--space-xl);
         }
-
         .feature-card {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             padding: var(--space-xl);
             transition: border-color 0.2s, transform 0.2s;
         }
-
         .feature-card:hover {
-            border-color: var(--color-border-hover);
+            border-color: var(--border-hover);
             transform: translateY(-4px);
         }
-
         .feature-icon {
             width: 48px;
             height: 48px;
-            background: linear-gradient(135deg, var(--color-primary), var(--color-accent-cyan));
+            background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
             border-radius: var(--radius-md);
             display: flex;
             align-items: center;
@@ -361,104 +284,29 @@
             font-size: 1.5rem;
             margin-bottom: var(--space-lg);
         }
-
         .feature-card h3 {
             font-size: 1.125rem;
             font-weight: 600;
             margin-bottom: var(--space-sm);
         }
-
         .feature-card p {
-            color: var(--color-text-secondary);
+            color: var(--text-secondary);
             font-size: 0.9375rem;
-        }
-
-        /* Architecture Diagram */
-        .diagram-container {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-xl);
-            overflow-x: auto;
-        }
-
-        .mermaid {
-            display: flex;
-            justify-content: center;
-        }
-
-        /* Code Examples */
-        .code-tabs {
-            display: flex;
-            gap: var(--space-sm);
-            margin-bottom: var(--space-md);
-            border-bottom: 1px solid var(--color-border);
-            padding-bottom: var(--space-md);
-        }
-
-        .code-tab {
-            padding: var(--space-sm) var(--space-lg);
-            background: transparent;
-            border: none;
-            color: var(--color-text-secondary);
-            cursor: pointer;
-            font-size: 0.875rem;
-            font-weight: 500;
-            border-radius: var(--radius-sm);
-            transition: all 0.2s;
-        }
-
-        .code-tab.active {
-            background: var(--color-primary);
-            color: white;
-        }
-
-        .code-tab:hover:not(.active) {
-            background: var(--color-surface-elevated);
-            color: var(--color-text-primary);
-        }
-
-        .code-block {
-            background: var(--color-surface-elevated);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            padding: var(--space-lg);
-            overflow-x: auto;
-            font-family: var(--font-mono);
-            font-size: 0.875rem;
-            line-height: 1.7;
-            color: var(--color-text-secondary);
-        }
-
-        .code-block .comment {
-            color: var(--color-text-muted);
-        }
-
-        .code-block .keyword {
-            color: var(--color-accent-violet);
-        }
-
-        .code-block .string {
-            color: var(--color-accent-emerald);
-        }
-
-        .code-block .function {
-            color: var(--color-primary-light);
         }
 
         /* Tabs */
         .tabs {
             display: flex;
-            gap: var(--space-md);
+            gap: var(--space-sm);
             margin-bottom: var(--space-xl);
-            border-bottom: 1px solid var(--color-border);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
         }
-
         .tab {
             padding: var(--space-md) var(--space-lg);
             background: transparent;
             border: none;
-            color: var(--color-text-secondary);
+            color: var(--text-secondary);
             cursor: pointer;
             font-size: 0.9375rem;
             font-weight: 500;
@@ -466,81 +314,174 @@
             margin-bottom: -1px;
             transition: all 0.2s;
         }
-
         .tab.active {
-            color: var(--color-primary-light);
-            border-bottom-color: var(--color-primary);
+            color: var(--primary-light);
+            border-bottom-color: var(--primary);
         }
-
+        .tab:hover:not(.active) {
+            color: var(--text-primary);
+            background: var(--surface);
+        }
         .tab-content {
             display: none;
         }
-
         .tab-content.active {
             display: block;
         }
 
+        /* Code Blocks */
+        .code-block {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+        .code-block .comment { color: var(--text-muted); }
+        .code-block .keyword { color: var(--accent-violet); }
+        .code-block .string { color: var(--accent-emerald); }
+        .code-block .function { color: var(--primary-light); }
+
+        /* Diagram Container */
+        .diagram-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            overflow-x: auto;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+
         /* Charts */
         .chart-container {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             padding: var(--space-xl);
             max-width: 800px;
+            margin: 0 auto var(--space-xl);
+        }
+
+        /* FAQ Accordion */
+        .faq-list {
+            max-width: 800px;
             margin: 0 auto;
         }
-
-        /* CTA Section */
-        .cta {
-            text-align: center;
-            padding: var(--space-3xl) var(--space-xl);
-            background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-bg) 100%);
-            border-top: 1px solid var(--color-border);
+        .faq-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-md);
+            overflow: hidden;
+        }
+        .faq-question {
+            width: 100%;
+            padding: var(--space-lg);
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .faq-question:hover { background: var(--surface-elevated); }
+        .faq-question::after {
+            content: '+';
+            font-size: 1.5rem;
+            color: var(--primary-light);
+            transition: transform 0.2s;
+        }
+        .faq-item.active .faq-question::after {
+            transform: rotate(45deg);
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+        }
+        .faq-answer-inner {
+            padding: 0 var(--space-lg) var(--space-lg);
+            color: var(--text-secondary);
+            line-height: 1.7;
         }
 
-        .cta h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
+        /* Live Demo Simulation */
+        .demo-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        .demo-header {
+            background: var(--surface-elevated);
+            padding: var(--space-md) var(--space-lg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        .demo-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .demo-dot.red { background: #ef4444; }
+        .demo-dot.yellow { background: #f59e0b; }
+        .demo-dot.green { background: #10b981; }
+        .demo-body {
+            padding: var(--space-lg);
+        }
+        .demo-status {
+            display: flex;
+            gap: var(--space-xl);
             margin-bottom: var(--space-lg);
+            flex-wrap: wrap;
         }
-
-        .cta p {
-            color: var(--color-text-secondary);
-            max-width: 600px;
-            margin: 0 auto var(--space-2xl);
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: 0.875rem;
         }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .status-dot.healthy { background: var(--accent-emerald); }
+        .status-dot.warning { background: var(--warning); }
+        .status-dot.error { background: var(--error); }
 
         /* Footer */
         .footer {
             padding: var(--space-2xl) var(--space-xl);
-            border-top: 1px solid var(--color-border);
+            border-top: 1px solid var(--border);
             text-align: center;
-            color: var(--color-text-muted);
+            color: var(--text-muted);
             font-size: 0.875rem;
         }
+        .footer a { color: var(--primary-light); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
 
-        .footer a {
-            color: var(--color-primary-light);
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
-
-        /* Responsive */
         @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-            
-            .hero h1 {
-                font-size: 2rem;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .nav-links { display: none; }
+            .hero h1 { font-size: 2rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -556,8 +497,9 @@
                 <ul class="nav-links">
                     <li><a href="#features">Features</a></li>
                     <li><a href="#architecture">Architecture</a></li>
-                    <li><a href="#cli">CLI Reference</a></li>
-                    <li><a href="#metrics">Metrics</a></li>
+                    <li><a href="#cli">CLI</a></li>
+                    <li><a href="#demo">Live Demo</a></li>
+                    <li><a href="#faq">FAQ</a></li>
                     <li><a href="https://github.com/RapidWebs-Enterprise/rw_blueprint" class="nav-cta">GitHub</a></li>
                 </ul>
             </nav>
@@ -570,8 +512,8 @@
             <span class="hero-badge-dot"></span>
             v0.2.0 — Production Ready
         </div>
-        <h1>Declarative Infrastructure<br>Source of Truth</h1>
-        <p>Validate, generate, probe, and reconcile your infrastructure topology with a single YAML file. Drift detection with human-in-the-loop approval.</p>
+        <h1>Infrastructure as a<br>Declarative Truth</h1>
+        <p>One YAML file. Full visibility. Automated drift detection with human-in-the-loop approval.</p>
         <div class="hero-actions">
             <a href="#cli" class="btn btn-primary">Get Started</a>
             <a href="https://github.com/RapidWebs-Enterprise/rw_blueprint" class="btn btn-secondary">View on GitHub</a>
@@ -587,15 +529,15 @@
             </div>
             <div class="stat-item">
                 <div class="stat-value">104+</div>
-                <div class="stat-label">Documentation Files</div>
+                <div class="stat-label">Documentation</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value">20</div>
-                <div class="stat-label">Architecture Decisions</div>
+                <div class="stat-label">ADR Decisions</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value">6</div>
-                <div class="stat-label">Core CLI Commands</div>
+                <div class="stat-label">CLI Commands</div>
             </div>
         </div>
     </section>
@@ -604,7 +546,7 @@
     <section id="features" class="section">
         <div class="section-header">
             <h2>Core Capabilities</h2>
-            <p>Everything you need to manage infrastructure as code with confidence.</p>
+            <p>Everything you need to manage infrastructure with confidence.</p>
         </div>
         <div class="features-grid">
             <div class="feature-card">
@@ -649,38 +591,37 @@
         <div class="diagram-container">
             <div class="mermaid">
 graph TB
-    subgraph "Input"
-        YAML[topology.yaml<br/>Canonical Source]
+    subgraph Input["Input Layer"]
+        YAML[topology.yaml]
     end
     
-    subgraph "Core Engine"
-        SCHEMA[Schema Layer<br/>Pydantic v2]
-        PROBE[Probe Registry<br/>Read-Only Collectors]
-        RECONCILE[Reconciler<br/>Drift Detection]
-        DEPLOY[Deployer Engine<br/>Execution]
+    subgraph Core["Core Engine"]
+        SCHEMA[Schema<br/>Pydantic v2]
+        PROBE[Probe Registry]
+        RECONCILE[Reconciler]
+        DEPLOY[Deployer]
+        IMAGE[Image Lifecycle]
     end
     
-    subgraph "Output"
-        DIAGRAMS[Diagrams & Docs]
-        DRIFT[Drift Report<br/>JSON/Markdown]
-        ARTIFACTS[Quadlet Units<br/>Incus Profiles]
+    subgraph Output["Output"]
+        ARTIFACTS[Artifacts<br/>Quadlets/Diagrams]
+        REPORT[Drift Report]
     end
     
-    subgraph "External"
-        NODES[Target Nodes<br/>via SSH]
-        REGISTRY[Container Registry]
+    subgraph External["External Systems"]
+        NODES[Target Nodes<br/>SSH]
+        REGISTRY[Registry]
     end
     
     YAML --> SCHEMA
     SCHEMA --> PROBE
     SCHEMA --> RECONCILE
     SCHEMA --> DEPLOY
+    DEPLOY --> IMAGE
     PROBE -->|Live State| RECONCILE
-    RECONCILE --> DRIFT
+    RECONCILE --> REPORT
     DEPLOY -->|Deploy| NODES
-    DEPLOY -->|Images| REGISTRY
-    DEPLOY --> ARTIFACTS
-    SCHEMA --> DIAGRAMS
+    IMAGE -->|Images| REGISTRY
             </div>
         </div>
     </section>
@@ -698,15 +639,19 @@ graph TB
             <button class="tab" onclick="showTab('probe')">Probe</button>
             <button class="tab" onclick="showTab('deploy')">Deploy</button>
             <button class="tab" onclick="showTab('image')">Image</button>
+            <button class="tab" onclick="showTab('mcp')">MCP</button>
         </div>
 
         <div id="tab-validate" class="tab-content active">
             <div class="code-block">
-<span class="comment"># Validate a topology file</span>
+<span class="comment"># Basic validation</span>
 rw-blueprint validate topology.yaml
 
-<span class="comment"># Output example:</span>
+<span class="comment"># Output:</span>
 <span class="comment"># Valid topology 'rapidwebs-rwdn' (7 nodes, 11 services).</span>
+
+<span class="comment"># Validate with strict mode</span>
+rw-blueprint validate topology.yaml --strict
             </div>
         </div>
 
@@ -715,20 +660,26 @@ rw-blueprint validate topology.yaml
 <span class="comment"># Generate all artifacts</span>
 rw-blueprint generate topology.yaml --output docs/generated/
 
-<span class="comment"># Generates:</span>
-<span class="comment"># - docs/generated/quadlet/*.container</span>
-<span class="comment"># - docs/generated/diagrams/architecture.mmd</span>
-<span class="comment"># - docs/generated/docs/topology.md</span>
+<span class="comment"># Generated structure:</span>
+<span class="comment"># docs/generated/</span>
+<span class="comment"># ├── quadlet/           # Podman systemd units</span>
+<span class="comment"># │   ├── pgvector.container</span>
+<span class="comment"># │   └── honcho-api.container</span>
+<span class="comment"># ├── diagrams/          # Mermaid visualizations</span>
+<span class="comment"># └── docs/              # Markdown documentation</span>
             </div>
         </div>
 
         <div id="tab-probe" class="tab-content">
             <div class="code-block">
 <span class="comment"># Run probes on multiple nodes</span>
-rw-blueprint probe --nodes srv1,infra,enterprise,dev --output docs/live.json
+rw-blueprint probe --nodes srv1,infra,enterprise,dev
 
-<span class="comment"># Run specific probes</span>
+<span class="comment"># Run specific probes only</span>
 rw-blueprint probe --probes incus,podman,port --nodes infra
+
+<span class="comment"># Save to file</span>
+rw-blueprint probe --nodes all --output docs/live-state.json
             </div>
         </div>
 
@@ -737,7 +688,7 @@ rw-blueprint probe --probes incus,podman,port --nodes infra
 <span class="comment"># Preview deployment (dry-run)</span>
 rw-blueprint deploy topology.yaml --node infra --dry-run
 
-<span class="comment"># Deploy with auto-rollback on health check failure</span>
+<span class="comment"># Deploy with auto-rollback</span>
 rw-blueprint deploy topology.yaml --node infra
 
 <span class="comment"># Deploy specific services</span>
@@ -753,66 +704,261 @@ rw-blueprint deploy topology.yaml --node infra --force
 <span class="comment"># List images on node</span>
 rw-blueprint image list --node infra
 
-<span class="comment"># Build image from source</span>
-rw-blueprint image build honcho-api --source /home/sysop/honcho --node infra
+<span class="comment"># Build from source</span>
+rw-blueprint image build honcho-api \
+    --source /home/sysop/honcho \
+    --node infra
 
 <span class="comment"># Pull from registry</span>
-rw-blueprint image pull honcho:latest --registry ghcr.io
+rw-blueprint image pull honcho:latest \
+    --registry ghcr.io
 
 <span class="comment"># Prune old images</span>
 rw-blueprint image prune --node infra --keep-latest 5
             </div>
         </div>
+
+        <div id="tab-mcp" class="tab-content">
+            <div class="code-block">
+<span class="comment"># Start MCP server (stdio)</span>
+uv run rw-blueprint mcp
+
+<span class="comment"># Start MCP server (HTTP/SSE)</span>
+uv run rw-blueprint mcp --http
+
+<span class="comment"># MCP Tools available:</span>
+<span class="comment"># - validate_topology</span>
+<span class="comment"># - generate_artifacts_tool</span>
+<span class="comment"># - run_probes</span>
+<span class="comment"># - reconcile_topology</span>
+            </div>
+        </div>
     </section>
 
-    <!-- Metrics -->
-    <section id="metrics" class="section">
+    <!-- Live Demo Simulation -->
+    <section id="demo" class="section">
         <div class="section-header">
-            <h2>Project Metrics</h2>
-            <p>Quality gates and coverage statistics.</p>
+            <h2>Live Demo</h2>
+            <p>Simulated real-time infrastructure state (demo data).</p>
         </div>
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--space-xl);">
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('demo-overview')">Overview</button>
+            <button class="tab" onclick="showTab('demo-drift')">Drift Report</button>
+            <button class="tab" onclick="showTab('demo-health')">Health Status</button>
+        </div>
+
+        <div id="tab-demo-overview" class="tab-content active">
+            <div class="demo-panel">
+                <div class="demo-header">
+                    <span class="demo-dot green"></span>
+                    <span class="demo-dot yellow"></span>
+                    <span class="demo-dot red"></span>
+                    <span style="margin-left: var(--space-md); color: var(--text-muted); font-size: 0.875rem;">
+                        rw-blueprint probe --nodes srv1,infra,enterprise,dev
+                    </span>
+                </div>
+                <div class="demo-body">
+                    <div class="demo-status">
+                        <div class="status-item">
+                            <span class="status-dot healthy"></span>
+                            <span>srv1: <strong>Online</strong></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot healthy"></span>
+                            <span>infra: <strong>Online</strong></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot warning"></span>
+                            <span>enterprise: <strong> Degraded</strong></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot healthy"></span>
+                            <span>dev: <strong>Online</strong></span>
+                        </div>
+                    </div>
+                    <div class="code-block" style="margin-top: var(--space-lg);">
+<span class="comment"># Sample probe output (truncated)</span>
+{
+  <span class="string">"nodes"</span>: [
+    {<span class="string">"id"</span>: <span class="string">"srv1"</span>, <span class="string">"type"</span>: <span class="string">"host"</span>, <span class="string">"tailscale_ip"</span>: <span class="string">"100.64.94.58"</span>},
+    {<span class="string">"id"</span>: <span class="string">"infra"</span>, <span class="string">"type"</span>: <span class="string">"container"</span>, <span class="string">"tailscale_ip"</span>: <span class="string">"100.79.58.118"</span>}
+  ],
+  <span class="string">"services"</span>: [
+    {<span class="string">"id"</span>: <span class="string">"honcho-api"</span>, <span class="string">"node"</span>: <span class="string">"infra"</span>, <span class="string">"status"</span>: <span class="string">"running"</span>},
+    {<span class="string">"id"</span>: <span class="string">"pgvector"</span>, <span class="string">"node"</span>: <span class="string">"infra"</span>, <span class="string">"status"</span>: <span class="string">"running"</span>}
+  ]
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-demo-drift" class="tab-content">
+            <div class="demo-panel">
+                <div class="demo-header">
+                    <span class="demo-dot green"></span>
+                    <span class="demo-dot yellow"></span>
+                    <span class="demo-dot red"></span>
+                    <span style="margin-left: var(--space-md); color: var(--text-muted); font-size: 0.875rem;">
+                        rw-blueprint reconcile topology.yaml docs/live-state.json
+                    </span>
+                </div>
+                <div class="demo-body">
+                    <div class="demo-status">
+                        <div class="status-item">
+                            <span class="status-dot healthy"></span>
+                            <span>Missing: <strong>2</strong></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot warning"></span>
+                            <span>Extra: <strong>1</strong></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot error"></span>
+                            <span>Mismatched: <strong>3</strong></span>
+                        </div>
+                    </div>
+                    <div class="code-block" style="margin-top: var(--space-lg);">
+<span class="comment"># Drift Report Summary</span>
+<span class="keyword">critical</span>: service <span class="string">"caddy"</span> declared but not running on infra
+<span class="keyword">warning</span>: service <span class="string">"knots-dns"</span> image mismatch (declared: v1.0, observed: v1.1)
+<span class="keyword">info</span>: extra container <span class="string">"test-service"</span> not in topology
+
+<span class="comment"># Total: 6 drift items detected</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-demo-health" class="tab-content">
+            <div class="demo-panel">
+                <div class="demo-header">
+                    <span class="demo-dot green"></span>
+                    <span class="demo-dot yellow"></span>
+                    <span class="demo-dot red"></span>
+                    <span style="margin-left: var(--space-md); color: var(--text-muted); font-size: 0.875rem;">
+                        Post-deployment health verification
+                    </span>
+                </div>
+                <div class="demo-body">
+                    <div class="demo-status">
+                        <div class="status-item">
+                            <span class="status-dot healthy"></span>
+                            <span>pgvector: <strong>Healthy</strong></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot healthy"></span>
+                            <span>honcho-api: <strong>Healthy</strong></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot error"></span>
+                            <span>caddy: <strong>Failed</strong></span>
+                        </div>
+                    </div>
+                    <div class="code-block" style="margin-top: var(--space-lg);">
+<span class="comment"># Health Check Results</span>
+<span class="keyword">✓</span> pgvector: port 5432 listening, database responsive
+<span class="keyword">✓</span> honcho-api: HTTP 200 /health endpoint
+<span class="keyword">✗</span> caddy: exit code 1, log shows config error
+
+<span class="comment"># Auto-rollback triggered for caddy</span>
+<span class="keyword">→</span> Restoring previous version...
+<span class="keyword">✓</span> Rollback successful
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--space-xl); margin-top: var(--space-2xl);">
+            <div class="chart-container">
+                <canvas id="driftChart"></canvas>
+            </div>
             <div class="chart-container">
                 <canvas id="coverageChart"></canvas>
             </div>
-            <div class="chart-container">
-                <canvas id="testsChart"></canvas>
-            </div>
         </div>
     </section>
 
-    <!-- Documentation -->
-    <section id="docs" class="section">
+    <!-- FAQ -->
+    <section id="faq" class="section">
         <div class="section-header">
-            <h2>Documentation</h2>
-            <p>Comprehensive guides and references.</p>
+            <h2>Frequently Asked Questions</h2>
+            <p>Common questions about rw_blueprint.</p>
         </div>
         
-        <div class="features-grid">
-            <div class="feature-card">
-                <h3>📚 User Guide</h3>
-                <p>Complete deployment workflows, troubleshooting, and best practices.</p>
+        <div class="faq-list">
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    What is the canonical source of truth?
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">
+                        <code>topology.yaml</code> is the single source of truth. It defines your desired infrastructure state using a declarative YAML schema. rw_blueprint validates this file, generates artifacts from it, and continuously compares it against live infrastructure to detect drift.
+                    </div>
+                </div>
             </div>
-            <div class="feature-card">
-                <h3>🏗️ Architecture</h3>
-                <p>System design, component interactions, and data flow diagrams.</p>
+
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    How does drift detection work?
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">
+                        The reconciler compares your declared topology against live infrastructure state collected by probes. It classifies differences into three categories: <strong>missing</strong> (declared but absent), <strong>extra</strong> (present but not declared), and <strong>mismatched</strong> (different attributes). Each drift item has a severity level: critical, warning, or info.
+                    </div>
+                </div>
             </div>
-            <div class="feature-card">
-                <h3>🔧 API Reference</h3>
-                <p>OpenAPI specification for MCP server integration.</p>
+
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    Is deployment automatic?
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">
+                        No. Per ADR-0015, all deployment changes are <strong>gated behind human approval</strong>. You can preview changes with <code>--dry-run</code>, confirm before applying, and enable auto-rollback if health checks fail. This follows the "emit untrusted, apply gated" security model.
+                    </div>
+                </div>
             </div>
-            <div class="feature-card">
-                <h3>📖 Examples</h3>
-                <p>Sample topologies for basic, advanced, and minimal deployments.</p>
+
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    What nodes are supported?
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">
+                        rw_blueprint supports any node reachable via SSH. Tested with:
+                        <ul style="margin-top: var(--space-md); padding-left: var(--space-lg);">
+                            <li>Hetzner VMs (srv1)</li>
+                            <li>Incus containers (infra, enterprise, dev)</li>
+                            <li>Local workstations</li>
+                            <li>Any Linux host with SSH access</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-            <div class="feature-card">
-                <h3>🔄 Migration</h3>
-                <p>Upgrade guides and breaking changes documentation.</p>
+
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    Can I use this with Kubernetes?
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">
+                        Currently rw_blueprint generates Podman quadlet units and Incus profiles. Kubernetes support is on the roadmap (Phase 2). You can extend the generator with custom templates for other platforms.
+                    </div>
+                </div>
             </div>
-            <div class="feature-card">
-                <h3>🛡️ Security</h3>
-                <p>Security policy, vulnerability reporting, and audit trail.</p>
+
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    How do I contribute?
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">
+                        See <a href="https://github.com/RapidWebs-Enterprise/rw_blueprint/blob/main/CONTRIBUTING.md" style="color: var(--primary-light);">CONTRIBUTING.md</a> for guidelines. We follow Conventional Commits and require tests for all changes. Run <code>uv run pytest</code> before submitting PRs.
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -837,66 +983,57 @@ rw-blueprint image prune --node infra --keep-latest 5
         mermaid.initialize({
             startOnLoad: true,
             theme: 'dark',
-            flowchart: {
-                useMaxWidth: true,
-                htmlLabels: true,
-                curve: 'basis'
-            }
+            flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }
         });
 
         // Tab switching
         function showTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(el => {
-                el.classList.remove('active');
-            });
-            document.querySelectorAll('.tab').forEach(el => {
-                el.classList.remove('active');
-            });
-            
-            // Show selected tab
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tabName).classList.add('active');
             event.target.classList.add('active');
         }
 
-        // Chart.js initialization
+        // FAQ toggle
+        function toggleFaq(btn) {
+            const item = btn.parentElement;
+            const wasActive = item.classList.contains('active');
+            
+            // Close all
+            document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('active'));
+            
+            // Open clicked if it wasn't active
+            if (!wasActive) {
+                item.classList.add('active');
+            }
+        }
+
+        // Charts
         document.addEventListener('DOMContentLoaded', function() {
-            // Coverage chart
-            const coverageCtx = document.getElementById('coverageChart').getContext('2d');
-            new Chart(coverageCtx, {
+            // Drift distribution chart
+            const driftCtx = document.getElementById('driftChart').getContext('2d');
+            new Chart(driftCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Test Coverage', 'Documentation', 'Remaining'],
+                    labels: ['Critical', 'Warning', 'Info'],
                     datasets: [{
-                        data: [95, 90, 5],
-                        backgroundColor: [
-                            '#3b82f6',
-                            '#06b6d4',
-                            '#1e293b'
-                        ],
+                        data: [2, 5, 12],
+                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'],
                         borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     plugins: {
-                        title: {
-                            display: true,
-                            text: 'Project Quality Metrics',
-                            color: '#f1f5f9',
-                            font: { size: 16, weight: '600' }
-                        },
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: '#94a3b8' }
-                        }
+                        title: { display: true, text: 'Drift Severity Distribution', color: '#f1f5f9', font: { size: 16, weight: '600' } },
+                        legend: { position: 'bottom', labels: { color: '#94a3b8' } }
                     }
                 }
             });
 
-            // Tests chart
-            const testsCtx = document.getElementById('testsChart').getContext('2d');
-            new Chart(testsCtx, {
+            // Coverage chart
+            const coverageCtx = document.getElementById('coverageChart').getContext('2d');
+            new Chart(coverageCtx, {
                 type: 'bar',
                 data: {
                     labels: ['Schema', 'Graph', 'Executor', 'Lifecycle', 'Security', 'Integration'],
@@ -910,24 +1047,12 @@ rw-blueprint image prune --node infra --keep-latest 5
                 options: {
                     responsive: true,
                     plugins: {
-                        title: {
-                            display: true,
-                            text: 'Test Distribution by Module',
-                            color: '#f1f5f9',
-                            font: { size: 16, weight: '600' }
-                        },
+                        title: { display: true, text: 'Test Coverage by Module', color: '#f1f5f9', font: { size: 16, weight: '600' } },
                         legend: { display: false }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: '#64748b' },
-                            grid: { color: 'rgba(59, 130, 246, 0.1)' }
-                        },
-                        x: {
-                            ticks: { color: '#64748b' },
-                            grid: { display: false }
-                        }
+                        y: { beginAtZero: true, ticks: { color: '#64748b' }, grid: { color: 'rgba(59, 130, 246, 0.1)' } },
+                        x: { ticks: { color: '#64748b' }, grid: { display: false } }
                     }
                 }
             });
