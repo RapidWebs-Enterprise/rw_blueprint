@@ -1,0 +1,26 @@
+schema_version: '0.2'
+metadata:
+  name: basic-example
+  description: Minimal single-node deployment
+  updated: 2026-09-19
+
+zones:
+  - id: default
+    name: Default
+
+nodes:
+  - id: localhost
+    zone: default
+    type: host
+
+services:
+  - id: hello-world
+    node: localhost
+    kind: application
+    service_type: container
+    image: localhost/hello-world:latest
+    ports:
+      - port: 8080
+
+links: []
+dependencies: []

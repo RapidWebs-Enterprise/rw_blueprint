@@ -1,0 +1,99 @@
+schema_version: '0.2'
+metadata:
+  name: advanced-example
+  description: Multi-node deployment with dependencies
+  updated: 2026-09-19
+
+zones:
+  - id: database
+    name: Database Zone
+  - id: application
+    name: Application Zone
+  - id: proxy
+    name: Proxy Zone
+
+nodes:
+  - id: db-node
+    zone: database
+    type: container
+    host: srv1
+    tailscale_ip: 100.79.58.118
+
+  - id: app-node
+    zone: application
+    type: container
+    host: srv1
+    tailscale_ip: 100.65.82.48
+
+  - id: proxy-node
+    zone: proxy
+    type: host
+    provider: hetzner
+    public_ip: 89.167.54.98
+
+services:
+  # Database layer
+  - id: postgres
+    node: db-node
+    kind: database
+    service_type: container
+    image: docker.io/postgres:15
+    ports:
+      - port: 5432
+
+  # Application layer
+  - id: api-service
+    node: app-node
+    kind: application
+    service_type: container
+    image: localhost/api-service:latest
+    ports:
+      - port: 8000
+    image_config:
+      build_context: /home/sysop/api-service
+      tag_strategy: git-sha
+
+  - id: worker
+    node: app-node
+    kind: application
+    service_type: container
+    image: localhost/worker:latest
+    ports: []
+
+  # Proxy layer
+  - id: caddy
+    node: proxy-node
+    kind: proxy
+    service_type: systemd
+    ports:
+      - port: 80
+        public: 80
+      - port: 443
+        public: 443
+
+links:
+  - id: db-to-app
+    from: db-node
+    to: app-node
+    protocol: tcp
+
+  - id: app-to-proxy
+    from: app-node
+    to: proxy-node
+    protocol: tcp
+
+dependencies:
+  - id: api-requires-postgres
+    from: api-service
+    to: postgres
+    type: requires
+
+  - id: worker-requires-api
+    from: worker
+    to: api-service
+    type: requires
+
+  - id: caddy-requires-api
+    from: caddy
+    to: api-service
+    type: requires

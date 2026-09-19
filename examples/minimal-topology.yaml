@@ -1,0 +1,16 @@
+schema_version: '0.2'
+metadata:
+  name: minimal
+  updated: 2026-09-19
+zones: []
+nodes:
+  - id: node1
+    zone: default
+    type: host
+services:
+  - id: svc1
+    node: node1
+    kind: application
+    service_type: container
+links: []
+dependencies: []
