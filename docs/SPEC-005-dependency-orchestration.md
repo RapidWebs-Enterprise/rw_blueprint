@@ -10,11 +10,11 @@ Services have dependencies. Starting Caddy before Honcho will fail. Starting Hon
 
 ## 2. Goals
 
-- [ ] Parse dependency declarations from topology YAML
-- [ ] Build dependency graph (DAG)
-- [ ] Perform topological sort for startup order
-- [ ] Detect and reject circular dependencies
-- [ ] Wait for dependencies to be healthy before starting dependents
+- [x] Parse dependency declarations from topology YAML
+- [x] Build dependency graph (DAG)
+- [x] Perform topological sort for startup order
+- [x] Detect and reject circular dependencies
+- [x] Wait for dependencies to be healthy before starting dependents
 - [ ] Handle partial failures gracefully
 
 ## 3. Design

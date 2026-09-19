@@ -23,12 +23,12 @@ This is error-prone, unrepeatable, and lacks:
 
 ## 2. Goals
 
-- [ ] Deploy services from `topology.yaml` to target nodes via SSH
-- [ ] Respect dependency ordering declared in topology
-- [ ] Verify service health after deployment
-- [ ] Support rollback on failure
-- [ ] Track deployment history
-- [ ] Support dry-run mode (preview changes without applying)
+- [x] Deploy services from `topology.yaml` to target nodes via SSH
+- [x] Respect dependency ordering declared in topology
+- [x] Verify service health after deployment
+- [x] Support rollback on failure
+- [x] Track deployment history
+- [x] Support dry-run mode (preview changes without applying)
 
 ## 3. Non-Goals
 
