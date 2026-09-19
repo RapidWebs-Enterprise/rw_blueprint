@@ -53,7 +53,7 @@
 | docs/SESSION_STATE.md | ✅ Present | 18,514 bytes | 2026-09-14 | 🟢 Good |
 | docs/QUALITY_OVERVIEW.md | ✅ Present | 10,186 bytes | 2026-09-02 | 🟢 Good |
 | docs/infrastructure-note-tmpfs.md | ✅ Present | 724 bytes | 2026-09-18 | 🟢 Good |
-| docs/DOCUMENTATION_AUDIT.md | ✅ Present | 11,842 bytes | 2026-09-19 | 🟢 Excellent |
+| docs/DOCUMENTATION_AUDIT.md | ✅ Present | 10,355 bytes | 2026-09-19 | 🟢 Excellent |
 | docs/guides/troubleshooting.md | ✅ Present | 11,229 bytes | 2026-09-19 | 🟢 Excellent |
 | docs/guides/deployment.md | ✅ Present | 12,295 bytes | 2026-09-19 | 🟢 Excellent |
 | docs/SPEC-004-deployment-engine.md | ✅ Present | 5,925 bytes | 2026-09-19 | 🟢 Good |
@@ -66,26 +66,7 @@
 
 | ADR | Title | Status |
 |-----|-------|--------|
-| 0001 | YAML Canonical Source of Truth | ✅ |
-| 0002 | Thin In-House Engine | ✅ |
-| 0003 | Python/Pydantic/Jinja2 Stack | ✅ |
-| 0004 | Jinja2 Template Generation | ✅ |
-| 0005 | Five-Entity Topology Model | ✅ |
-| 0006 | Structured Ports | ✅ |
-| 0007 | Live State Projection Schema | ✅ |
-| 0008 | Three-Way Drift Classification | ✅ |
-| 0009 | Pull-First Sequencing | ✅ |
-| 0010 | In-Process Probe Registry | ✅ |
-| 0011 | Emit-Untrusted / Apply-Gated | ✅ |
-| 0012 | Osquery Model Not Tool | ✅ |
-| 0013 | MCP Agent Integration Surface | ✅ |
-| 0014 | Entry-Points Probe Discovery | ✅ |
-| 0015 | Remediation As Proposal | ✅ |
-| 0016 | Schema Migration Handler Registry | ✅ |
-| 0017 | Machine-Readable Drift Report | ✅ |
-| 0018 | Layered Configuration | ✅ |
-| 0019 | Controller Pattern | ✅ |
-| 0020 | Quadlet Deployment Target | ✅ |
+| 0001-0020 | All ADRs | ✅ Complete |
 
 **Total ADRs:** 20 (18 accepted, 2 proposed)
 
@@ -93,58 +74,33 @@
 
 | SPEC | Title | Status |
 |------|-------|--------|
-| RWBP-2026-001 | Core Engine | ✅ Implemented |
-| RWBP-2026-002 | Reconcile Layer | ✅ Implemented |
-| RWBP-2026-003 | Image Lifecycle | ✅ Implemented |
-| SPEC-004 | Deployment Engine | ✅ Implemented |
-| SPEC-005 | Dependency Orchestration | ✅ Implemented |
-| SPEC-006 | Rollback & Recovery | ✅ Implemented |
-| image-lifecycle.md | Image Lifecycle Spec | ✅ Implemented |
+| RWBP-2026-001 to 003 | Core specs | ✅ Implemented |
+| SPEC-004 to 006 | Deployment specs | ✅ Implemented |
+| image-lifecycle.md | Image lifecycle | ✅ Implemented |
 
 ### ✅ Audit Reports (Complete)
 
 | Audit | Status |
 |-------|--------|
-| forward-audit-RWBP-2026-001.md | ✅ |
-| forward-audit-RWBP-2026-002.md | ✅ |
-| forward-audit-RWBP-2026-003.md | ✅ |
-| reverse-audit-RWBP-2026-001.md | ✅ |
-| reverse-audit-RWBP-2026-002.md | ✅ |
-| reverse-audit-RWBP-2026-003.md | ✅ |
-| synthesis-RWBP-2026-002.md | ✅ |
-| synthesis-RWBP-2026-003.md | ✅ |
-| forward-audit-deployment-engine.md | ✅ |
-| reverse-audit-deployment-engine.md | ✅ |
-| forward-audit-image-lifecycle.md | ✅ |
-| reverse-audit-image-lifecycle.md | ✅ |
-| adversarial-audit-image-lifecycle.md | ✅ |
-| bug-review-image-lifecycle.md | ✅ |
+| Forward audits (×3) | ✅ |
+| Reverse audits (×3) | ✅ |
+| Synthesis reports (×2) | ✅ |
+| Deployment engine audits (×2) | ✅ |
+| Image lifecycle audits (×4) | ✅ |
 
-### ✅ Operator Guides (Complete)
-
-| Guide | Status |
-|-------|--------|
-| docs/operator-guide/image-lifecycle.md | ✅ |
-| docs/guides/troubleshooting.md | ✅ **NEW** |
-| docs/guides/deployment.md | ✅ **NEW** |
+**Total Audits:** 14
 
 ### ✅ Research Documents
 
-| Research | Status |
-|----------|--------|
-| Agent Integration Surface | ✅ |
-| Canonical Topology YAML Schema | ✅ |
-| Declared vs Actual Reconciliation | ✅ |
-| Ecosystem Gap Analysis | ✅ |
-| Event Driven Watchdog Architecture | ✅ |
-| Generator Architecture | ✅ |
-| Host Introspection Model | ✅ |
-| Live State Schema Projection | ✅ |
-| Probe Collector Plugin Architecture | ✅ |
-| Reference Projects | ✅ |
-| YAML Source of Truth Landscape | ✅ |
+**Total Research:** 11 papers
 
-**Total Research:** 11 documents
+### ✅ Operator Guides
+
+| Guide | Status |
+|-------|--------|
+| Image lifecycle | ✅ |
+| Troubleshooting | ✅ NEW |
+| Deployment | ✅ NEW |
 
 ---
 
@@ -225,7 +181,7 @@ Examples:          ██████░░░░░░░░░░░░░░ 
 |------|--------|-------|
 | API Reference | 🟡 Partial | CLI docs in README, no OpenAPI spec |
 | Examples | 🟡 Partial | topology.yaml present, could add more samples |
-| Migration Guide | ⚪ Not started | Will add when v0.3 released |
+| Migration Guide | ⚪ Not started | Will add when v0.3 releases |
 | Video Tutorials | ⚪ Not started | Future enhancement |
 
 ---
