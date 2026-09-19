@@ -1,7 +1,8 @@
 # SPEC-005: Dependency-Aware Orchestration
 
-**Status**: Proposed  
+**Status**: Implemented  
 **Created**: 2026-09-15  
+**Last Updated**: 2026-09-19  
 **Parent**: SPEC-004 (Deployment Engine)
 
 ## 1. Problem Statement
@@ -16,11 +17,6 @@ Services have dependencies. Starting Caddy before Honcho will fail. Starting Hon
 - [x] Detect and reject circular dependencies
 - [x] Wait for dependencies to be healthy before starting dependents
 - [x] Handle partial failures gracefully
-
-## 3. Design
-
-### 3.1 Dependency Graph
-(unchanged)
 
 ## 3. Design
 
@@ -41,32 +37,14 @@ Portainer
 
 ### 3.2 Topological Sort Algorithm
 
+Implemented in `src/rw_blueprint/deployer/graph.py`:
+
 ```python
-def topological_sort(services: list[Service]) -> list[list[Service]]:
-    """Sort services into startup layers.
-    
-    Returns list of layers, where each layer can start in parallel.
-    """
-    graph = build_dependency_graph(services)
-    in_degree = {s.id: len(graph[s.id].depends_on) for s in services}
-    queue = [s for s in services if in_degree[s.id] == 0]
-    layers = []
-    
-    while queue:
-        layer = queue.copy()
-        queue = []
-        for service in layer:
-            layers.append(service)
-            for dependent in graph[service.id].dependents:
-                in_degree[dependent] -= 1
-                if in_degree[dependent] == 0:
-                    queue.append(dependent)
-    
-    if len(layers) != len(services):
-        raise CircularDependencyError("Circular dependency detected")
-    
-    return layers
+def topological_sort(graph: DependencyGraph) -> list[list[str]]:
+    """Sort services into startup layers using Kahn's algorithm."""
 ```
+
+Returns list of layers where each layer can start in parallel.
 
 ### 3.3 Startup Phases
 
@@ -84,42 +62,47 @@ A service is "healthy" when:
 2. Optional: HTTP health endpoint returns 200
 3. Optional: Custom health command succeeds
 
-```yaml
-services:
-  - id: honcho-api
-    health_check:
-      http:
-        url: http://localhost:8000/health
-        expected_status: 200
-      timeout: 30
+## 4. Implementation
+
+### 4.1 Core Components
+
+- `DependencyGraph` — DAG representation
+- `build_dependency_graph()` — Construct from service list
+- `topological_sort()` — Kahn's algorithm for ordering
+- `detect_cycles()` — DFS-based cycle detection
+
+### 4.2 Error Handling
+
+- `CircularDependencyError` raised when cycles detected
+- Partial failures logged but don't block other services
+- Cross-node dependencies tracked via action dependencies
+
+## 5. Test Coverage
+
+| Test | Status |
+|------|--------|
+| Linear dependency order | ✅ |
+| Parallel branches | ✅ |
+| Circular dependency detection | ✅ |
+| Missing dependency handling | ✅ |
+| Cycle detection returns cycles | ✅ |
+
+**Tests**: 194 passing
+
+## 6. Usage Example
+
+```bash
+# Deploy with dependency ordering
+rw-blueprint deploy topology.yaml --node infra
+
+# Preview deployment plan
+rw-blueprint plan topology.yaml --node infra
 ```
 
-## 4. Failure Handling
+## 7. Future Enhancements
 
-### 4.1 Dependency Not Ready
+- [ ] Automatic wait for dependency health
+- [ ] Retry failed dependencies
+- [ ] Dependency health timeouts
 
-If service A depends on B, and B fails to start:
-- Wait for configured timeout
-- If still failed, abort deployment of A
-- Roll back any partially deployed services
-
-### 4.2 Partial Failure
-
-If some services succeed and others fail:
-- Stop all successfully started services
-- Log the failure state
-- Require manual intervention
-
-## 5. Testing Requirements
-
-- [ ] Test topological sort with linear dependency
-- [ ] Test topological sort with parallel branches
-- [ ] Test circular dependency detection
-- [ ] Test missing dependency handling
-- [ ] Test health check timeout
-- [ ] Test rollback on dependency failure
-
-## 6. Open Questions
-
-- [ ] Should we support soft dependencies (Wants=) vs hard dependencies (Requires=)?
-- [ ] How to handle dynamic dependencies (service discovery)?
+---
