@@ -25,8 +25,14 @@ class TestValidateBuildContext:
 
     def test_valid_build_context(self, tmp_path):
         """Valid build context returns resolved path."""
-        result = validate_build_context(str(tmp_path))
-        assert result == tmp_path.resolve()
+        # Use /tmp directly since tmp_path may not match allowed roots
+        ctx = Path("/tmp/rwbp-test-build-context")
+        ctx.mkdir(exist_ok=True)
+        try:
+            result = validate_build_context(str(ctx))
+            assert result == ctx.resolve()
+        finally:
+            ctx.rmdir()  # Clean up
 
     def test_nonexistent_path_raises(self):
         """Non-existent path raises ImageSecurityError."""
@@ -50,11 +56,17 @@ class TestValidateBuildContext:
             validate_build_context(str(evil_link))
 
     def test_nested_workspace_allowed(self, tmp_path):
-        """Nested paths within Workspaces are allowed."""
-        nested = tmp_path / "subdir" / "nested"
-        nested.mkdir(parents=True)
-        result = validate_build_context(str(nested))
-        assert "Workspaces" in str(result) or str(result) == str(nested.resolve())
+        """Nested paths within allowed roots are allowed."""
+        # Use /tmp directly since tmp_path may not match allowed roots
+        nested = Path("/tmp/rwbp-test-nested/subdir/nested")
+        nested.mkdir(parents=True, exist_ok=True)
+        try:
+            result = validate_build_context(str(nested))
+            # Should return the resolved path without raising
+            assert result == nested.resolve()
+        finally:
+            import shutil
+            shutil.rmtree(nested.parent, ignore_errors=True)
 
 
 class TestValidateLabel:

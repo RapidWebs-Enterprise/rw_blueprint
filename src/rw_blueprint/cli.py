@@ -516,6 +516,7 @@ def deploy(
     node: str = typer.Option(..., "--node", "-n", help="Target node to deploy to"),
     services: str | None = typer.Option(None, "--services", "-s", help="Comma-separated list of services to deploy"),
     force: bool = typer.Option(False, "--force", help="Skip confirmation prompts"),
+    dry_run: bool = typer.Option(False, "--dry-run", "-d", help="Show what would be deployed without applying"),
 ) -> None:
     """Deploy services to a node."""
     # Load topology
@@ -537,6 +538,18 @@ def deploy(
     # Generate plan
     generator = PlanGenerator()
     plan = generator.generate(desired=node_services, existing={})
+
+    if dry_run:
+        console.print(f"\n[bold]Dry-run mode: showing planned changes for {node}[/bold]\n")
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column("Service")
+        table.add_column("Action")
+        table.add_column("Config Path")
+        for action in plan.actions:
+            table.add_row(action.service, action.action, action.config_path or "")
+        console.print(table)
+        console.print(f"\n[yellow]Total actions: {len(plan.actions)}[/yellow]")
+        raise typer.Exit(code=0)
 
     if not force and plan.requires_approval:
         console.print(f"\n[bold]Blast radius: [yellow]{plan.blast_radius.value}[/yellow][/bold]")
@@ -573,8 +586,16 @@ def deploy(
             console.print(f"  [green]✓[/green] {service_id}: healthy")
         else:
             console.print(f"  [red]✗[/red] {service_id}: unhealthy")
-            for check, detail in health.details.items():
-                console.print(f"    - {check}: {detail}")
+            if not force:
+                console.print(f"\n[yellow]Health check failed for {service_id}. Rollback requested.[/yellow]")
+                rollback_result = rollback_service(node, service_id, force=False)
+                if rollback_result.success:
+                    console.print(f"[green]✓ Rolled back {service_id}[/green]")
+                else:
+                    console.print(f"[red]✗ Rollback failed: {rollback_result.error_message}[/red]")
+                raise typer.Exit(code=1)
+
+    console.print(f"\n[green]✓ All services healthy on {node}[/green]")
 
     # Record deployment
     from rw_blueprint.deployer.state import DeploymentRecord
@@ -594,17 +615,23 @@ def deploy(
         state_tracker.record(node, service_id, record)
 
 
+def rollback_service(node: str, service: str, force: bool = False) -> Any:
+    """Helper to rollback a service (used by deploy health check)."""
+    from rw_blueprint.deployer.rollback import RollbackResult
+    from rw_blueprint.deployer.targets import TargetManager
+    target_manager = TargetManager()
+    state_tracker = DeploymentState(storage_dir=Path(".rw_blueprint/deployments"))
+    executor = RollbackExecutor(target_manager=target_manager, state_tracker=state_tracker)
+    return executor.rollback(node, service)
+
+
 @app.command()
 def rollback(
     service: str = typer.Argument(..., help="Service to rollback"),
     node: str = typer.Option(..., "--node", "-n", help="Target node"),
 ) -> None:
     """Rollback a service to its previous healthy state."""
-    target_manager = TargetManager()
-    state_tracker = DeploymentState(storage_dir=Path(".rw_blueprint/deployments"))
-    executor = RollbackExecutor(target_manager=target_manager, state_tracker=state_tracker)
-
-    result = executor.rollback(node, service)
+    result = rollback_service(node, service, force=False)
 
     if result.success:
         console.print(f"[green]✓ Rolled back {service} on {node}[/green]")
