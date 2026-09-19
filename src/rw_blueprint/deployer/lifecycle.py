@@ -157,10 +157,16 @@ class ImageLifecycle:
                     timeout=300,
                 )
                 if result.success:
-                    image_ref.built_at = datetime.now()
-                    image_ref.source = "pull"
-                    self._image_cache[f"{node}:{ref_string}"] = image_ref
-                    return image_ref
+                    return ImageRef(
+                        name=image_ref.name,
+                        tag=image_ref.tag,
+                        digest=image_ref.digest,
+                        source="pull",
+                        built_at=datetime.now(),
+                        git_sha=image_ref.git_sha,
+                        git_repo=image_ref.git_repo,
+                        labels=image_ref.labels,
+                    )
                 last_error = result.stderr
             except Exception as e:
                 last_error = str(e)
@@ -231,12 +237,16 @@ class ImageLifecycle:
                     node, cmd, timeout=timeout, sudo=True
                 )
                 if result.success:
-                    image_ref.source = "build"
-                    image_ref.built_at = datetime.now()
-                    image_ref.git_sha = self._get_git_sha(context_path)
-                    image_ref.git_repo = self._get_git_repo(context_path)
-                    self._image_cache[f"{node}:{image_ref.reference}"] = image_ref
-                    return image_ref
+                    return ImageRef(
+                        name=image_ref.name,
+                        tag=image_ref.tag,
+                        digest=image_ref.digest,
+                        source="build",
+                        built_at=datetime.now(),
+                        git_sha=self._get_git_sha(context_path),
+                        git_repo=self._get_git_repo(context_path),
+                        labels=image_ref.labels,
+                    )
                 last_error = result.stderr
             except Exception as e:
                 last_error = str(e)
