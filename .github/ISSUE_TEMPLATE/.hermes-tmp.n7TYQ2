@@ -1,0 +1,66 @@
+# Issue Templates
+
+## Bug Report
+
+Use this template to report bugs.
+
+### Bug Description
+A clear and concise description of what the bug is.
+
+### To Reproduce
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
+
+### Expected Behavior
+A clear and concise description of what you expected to happen.
+
+### Screenshots
+If applicable, add screenshots to help explain your problem.
+
+### Environment
+- OS: [e.g. Ubuntu 22.04]
+- Python version: [e.g. 3.11]
+- rw_blueprint version: [e.g. 0.2.0]
+
+### Additional Context
+Add any other context about the problem here.
+
+---
+
+## Feature Request
+
+Use this template to request new features.
+
+### Is your feature request related to a problem?
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+
+### Describe the solution you'd like
+A clear and concise description of what you want to happen.
+
+### Describe alternatives you've considered
+A clear and concise description of any alternative solutions or features you've considered.
+
+### Additional context
+Add any other context or screenshots about the feature request here.
+
+---
+
+## Documentation Issue
+
+Use this template for documentation improvements.
+
+### What needs to be documented?
+A clear and concise description of what documentation is missing or needs improvement.
+
+### Where should this documentation go?
+- [ ] README.md
+- [ ] CONTRIBUTING.md
+- [ ] docs/ directory
+- [ ] Inline code comments
+- [ ] Other: ________
+
+### Suggested content
+What should the documentation cover?
