@@ -136,7 +136,7 @@ class DeployExecutor:
 
         # Also check if any container already using this port exists
         port_check = self.target.execute(node, ["podman", "ps", "-a", "--format", "{{.Ports}}"])
-        port_exists = check_result.success and bool(port_check.stdout.strip())
+        port_exists = port_check.success and bool(port_check.stdout.strip())
 
         # Transfer quadlet file if provided
         if action.config_path and output_dir:

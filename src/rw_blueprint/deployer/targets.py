@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import run, PIPE, CalledProcessError
+import shlex
 
 
 @dataclass
@@ -63,8 +64,8 @@ class TargetManager:
         user = node_config.get("user", "sysop")
         key = node_config.get("key")
 
-        # Build SSH command
-        ssh_cmd = ["ssh", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=10"]
+        # Build SSH command - use list form to prevent shell injection
+        ssh_cmd = ["ssh", "-o", "StrictHostKeyChecking=accept-new", "-o", "ConnectTimeout=10"]
         if key:
             ssh_cmd.extend(["-i", key])
         ssh_cmd.extend([f"{user}@{host}"])
@@ -75,10 +76,10 @@ class TargetManager:
         else:
             full_cmd = command
 
-        # Execute via SSH
+        # Execute via SSH using list form (no bash -c)
         try:
             result = run(
-                ["bash", "-c", f"{' '.join(ssh_cmd)} {' '.join(full_cmd)}"],
+                ssh_cmd + full_cmd,
                 capture_output=True,
                 text=True,
                 timeout=timeout,
@@ -155,8 +156,8 @@ class TargetManager:
                         stderr=result.stderr,
                     )
                 # Move to final location with sudo
-                move_cmd = ["sudo", "mv", tmp_path, str(remote_path)]
-                move_result = self.execute(node_id, move_cmd, sudo=True)
+                # Use single SSH call with sudo (not double sudo)
+                move_result = self.execute(node_id, ["mv", tmp_path, str(remote_path)], sudo=True)
                 return move_result
             except FileNotFoundError:
                 return RunResult(

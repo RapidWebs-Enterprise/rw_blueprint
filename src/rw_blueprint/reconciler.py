@@ -212,30 +212,6 @@ class Reconciler:
             self._compare_links,
         )
 
-        # --- Zones (declared only, not observable) ---
-        for zone_id, _zone in declared_zones.items():
-            report.add_item(
-                DriftItem(
-                    category=DriftCategory.MISSING,
-                    severity=DriftSeverity.INFO,
-                    entity_type="zone",
-                    entity_id=zone_id,
-                    message=f"Zone '{zone_id}' is a design-time construct (not observable)",
-                )
-            )
-
-        # --- Dependencies (declared only, not observable) ---
-        for dep_id, _dep in declared_deps.items():
-            report.add_item(
-                DriftItem(
-                    category=DriftCategory.MISSING,
-                    severity=DriftSeverity.INFO,
-                    entity_type="dependency",
-                    entity_id=dep_id,
-                    message=f"Dependency '{dep_id}' is a logical construct (not observable)",
-                )
-            )
-
         # Apply ignore rules
         self.ignore_rules.apply(report)
 

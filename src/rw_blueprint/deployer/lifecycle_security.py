@@ -5,13 +5,17 @@ Provides path traversal protection, label sanitization, and disk space checks.
 
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 
 
+logger = logging.getLogger(__name__)
+
+
 # Validation patterns
 LABEL_PATTERN = re.compile(r'^[a-zA-Z0-9_.\-]+$')
-ALLOWED_BUILD_ROOTS = [Path.home() / "Workspaces", Path("/tmp")]
+ALLOWED_BUILD_ROOTS = [Path.home() / "Workspaces"]
 
 
 class ImageSecurityError(Exception):
@@ -82,8 +86,7 @@ def sanitize_labels(labels: dict[str, str]) -> dict[str, str]:
         if validate_label(key, str(value)):
             sanitized[key] = str(value)
         else:
-            # Log warning but continue - don't fail on bad labels
-            pass
+            logger.warning("Dropped invalid label: key=%s value=%s", key, value)
     return sanitized
 
 
@@ -100,8 +103,22 @@ def check_disk_space(node: str, required_mb: int = 5000) -> bool:
     Raises:
         InsufficientDiskSpace: If not enough space.
     """
-    # This is a placeholder - actual implementation will execute via SSH
-    # For now, return True to pass existing tests
+    import subprocess
+    from rw_blueprint.deployer.targets import TargetManager
+
+    tm = TargetManager({node: {"host": node}})
+    result = tm.execute(node, ["df", "-BG", "/var/lib/containers"], sudo=True)
+    if not result.success:
+        # Fallback: assume sufficient if we can't check
+        logger.warning("Could not check disk space for %s, assuming OK", node)
+        return True
+
+    available_mb = parse_disk_space_output(result.stdout)
+    if available_mb < required_mb:
+        raise InsufficientDiskSpace(
+            f"Insufficient disk space on {node}: {available_mb}MB available, "
+            f"{required_mb}MB required"
+        )
     return True
 
 

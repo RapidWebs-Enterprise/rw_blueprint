@@ -568,7 +568,13 @@ def deploy(
     output_dir = Path("docs/generated")
     generate_artifacts(topo, output_dir)
 
-    result = executor.execute(plan, node, output_dir=output_dir)
+    result = executor.execute(
+        plan,
+        node,
+        output_dir=output_dir,
+        state_tracker=state_tracker,
+        continue_on_failure=True,  # Continue if individual services fail
+    )
 
     if result.success:
         console.print(f"\n[green]✓ Deployment successful for {node}[/green]")

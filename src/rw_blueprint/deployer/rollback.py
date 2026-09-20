@@ -72,9 +72,12 @@ class RollbackExecutor:
             # Restore previous quadlet file from artifact storage
             config_path = f"/etc/containers/systemd/{service}.container"
 
-            # Try to restore from stored artifact
-            if previous and previous.image:
-                artifact = self.state.get_artifact(node, service, previous.image)
+            # Try to restore from stored artifact (keyed by "current" or image name)
+            restored = False
+            for artifact_key in ("current", previous.image):
+                if artifact_key is None:
+                    continue
+                artifact = self.state.get_artifact(node, service, artifact_key)
                 if artifact and artifact.exists():
                     # Transfer artifact back to node
                     import tempfile
@@ -89,15 +92,12 @@ class RollbackExecutor:
                             sudo=True,
                         )
                         if result.success:
-                            result = self.target.execute(
-                                node,
-                                ["systemctl", "daemon-reload"],
-                                sudo=True,
-                            )
+                            restored = True
+                            break
                     finally:
                         Path(tmp_path).unlink(missing_ok=True)
 
-            # Start previous service
+            # Only reload systemd if transfer succeeded or we have a fallback
             result = self.target.execute(
                 node,
                 ["systemctl", "daemon-reload"],
@@ -111,6 +111,7 @@ class RollbackExecutor:
                     error_message=f"Failed to reload systemd: {result.stderr}",
                 )
 
+            # Start previous service
             result = self.target.execute(
                 node,
                 ["systemctl", "enable", "--now", f"{service}.container"],

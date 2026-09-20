@@ -23,16 +23,15 @@ from rw_blueprint.deployer.lifecycle_security import (
 class TestValidateBuildContext:
     """Tests for build context validation."""
 
-    def test_valid_build_context(self, tmp_path):
-        """Valid build context returns resolved path."""
-        # Use /tmp directly since tmp_path may not match allowed roots
-        ctx = Path("/tmp/rwbp-test-build-context")
-        ctx.mkdir(exist_ok=True)
+    def test_valid_build_context(self):
+        """Valid build context under Workspaces returns resolved path."""
+        ctx = Path.home() / "Workspaces" / "rw_blueprint_test_tmp"
+        ctx.mkdir(exist_ok=True, parents=True)
         try:
             result = validate_build_context(str(ctx))
             assert result == ctx.resolve()
         finally:
-            ctx.rmdir()  # Clean up
+            ctx.rmdir()
 
     def test_nonexistent_path_raises(self):
         """Non-existent path raises ImageSecurityError."""
@@ -46,8 +45,8 @@ class TestValidateBuildContext:
         with pytest.raises(ImageSecurityError, match="not a directory"):
             validate_build_context(str(file_path))
 
-    def test_path_traversal_blocked_home_workspaces(self, tmp_path):
-        """Path traversal outside Workspaces/tmp is blocked."""
+    def test_path_traversal_blocked(self, tmp_path):
+        """Path traversal outside Workspaces is blocked."""
         # Create a symlink to /etc outside allowed roots
         evil_link = tmp_path / "evil"
         evil_link.symlink_to("/etc")
@@ -55,18 +54,11 @@ class TestValidateBuildContext:
         with pytest.raises(ImageSecurityError, match="path traversal blocked"):
             validate_build_context(str(evil_link))
 
-    def test_nested_workspace_allowed(self, tmp_path):
-        """Nested paths within allowed roots are allowed."""
-        # Use /tmp directly since tmp_path may not match allowed roots
-        nested = Path("/tmp/rwbp-test-nested/subdir/nested")
-        nested.mkdir(parents=True, exist_ok=True)
-        try:
-            result = validate_build_context(str(nested))
-            # Should return the resolved path without raising
-            assert result == nested.resolve()
-        finally:
-            import shutil
-            shutil.rmtree(nested.parent, ignore_errors=True)
+    def test_tmp_path_not_allowed(self, tmp_path):
+        """Paths outside Workspaces (like /tmp) are rejected."""
+        # tmp_path creates something like /tmp/pytest-of-... which is NOT allowed
+        with pytest.raises(ImageSecurityError, match="path traversal blocked"):
+            validate_build_context(str(tmp_path))
 
 
 class TestValidateLabel:
@@ -129,10 +121,38 @@ class TestSanitizeLabels:
 class TestCheckDiskSpace:
     """Tests for disk space checking."""
 
-    def test_check_disk_space_returns_true(self):
-        """Placeholder returns True for now."""
+    def test_check_disk_space_returns_true(self, monkeypatch):
+        """Returns True when SSH check fails (fallback to safe default)."""
+        # Mock the execute method to simulate SSH failure
+        from rw_blueprint.deployer.targets import TargetManager
+
+        def mock_execute(self, node_id, command, timeout=30, sudo=False):
+            # Simulate SSH connection failure
+            from rw_blueprint.deployer.targets import RunResult
+            return RunResult(success=False, returncode=-1, stdout="", stderr="Connection failed")
+
+        monkeypatch.setattr(TargetManager, "execute", mock_execute)
         result = check_disk_space("localhost")
         assert result is True
+
+    def test_check_disk_space_insufficient(self, monkeypatch):
+        """Raises InsufficientDiskSpace when space is low."""
+        from unittest.mock import MagicMock
+
+        # Mock the execute method to return low disk space
+        mock_result = MagicMock()
+        mock_result.success = True
+        mock_result.stdout = "Filesystem      1K-blocks  Used Available Use% Mounted\n/dev/sda1    1000000   999000    1000  99% /\n"
+
+        from rw_blueprint.deployer.targets import TargetManager
+
+        def mock_execute(self, node_id, command, timeout=30, sudo=False):
+            return mock_result
+
+        monkeypatch.setattr(TargetManager, "execute", mock_execute)
+
+        with pytest.raises(InsufficientDiskSpace, match="Insufficient disk space"):
+            check_disk_space("testnode", required_mb=5000)
 
 
 class TestParseDiskSpaceOutput:
